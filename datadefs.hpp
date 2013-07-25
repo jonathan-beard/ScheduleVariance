@@ -3,23 +3,30 @@
 
 #include <cstdlib>
 #include <cstdio>
-
-#define _GNU_SOURCE
+#include <cstring>
+#include <cstdint>
+#include <unistd.h>
+#include <errno.h>
 #include <sched.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
 
 #define DEFAULT_BUFFER_SIZE 50
 #define RNGTYPE gsl_rng_mt19937
 
 enum Settings { NO = 0, YES };
-enum Schedulers { SCHED_FIFO,
-                  SCHED_RR,
-                  SCHED_OTHER,
-                  SCHED_BATCH,
-                  Unknown };
+enum Schedulers  { FIFO,
+                   RR,
+                   OTHER,
+                   BATCH,
+                   Unknown };
 
 
 
 union TicksToWait{
+   TicksToWait( uint64_t x ) : i(x){}
+
    double   d;
    uint64_t i;
 };
@@ -37,10 +44,10 @@ struct ProcSettings{
       mean_ticks_to_wait( 0 ),
       scheduler_num( Unknown ),
       deterministic( NO ),
-      run_length( 0 )
+      run_length( 0.0 )
    {
-      memset( scheduler_string, '\0', DEFAULT_BUFFER_SIZE );
-      memset( system_given_scheduler, '\0', DEFUALT_BUFFER_SIZE );
+      memset( scheduler_string, '\0',       DEFAULT_BUFFER_SIZE );
+      memset( system_given_scheduler, '\0', DEFAULT_BUFFER_SIZE );
    }
 
 
@@ -109,21 +116,21 @@ struct ProcSettings{
 
 
       
-   int32_t     id;
-   int32_t     nodeNumber;
-   int32_t     which_processor;
+   int64_t     id;
+   int64_t     node_number;
+   int64_t     which_processor;
    cpu_set_t   *cpusetp;
-   uint32_t    num_system_processors;
-   int32_t     is_child; /* 1 if true */
-   int32_t     num_children;
+   uint64_t    num_system_processors;
+   int64_t     is_child; /* 1 if true */
+   int64_t     num_children;
    gsl_rng     *rng; /* only allocate after fork */
-   union       ticks_to_wait mean_ticks_to_wait;
+   union       TicksToWait mean_ticks_to_wait;
    struct      timespec myquanta;
    char        scheduler_string[50];
    int         scheduler_num;
    char        system_given_scheduler[50];
-   int8_t      deterministic; /* 0 if not */
-   double      runlength;
+   bool        deterministic; /* 0 if not */
+   double      run_length;
 };
 
 

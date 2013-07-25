@@ -9,16 +9,16 @@ endif
 
 
 DEBUG = -g
-CFLAGS = -Wall -O0  $(DEBUG)
-CXXFLAGS = -Wall -O0 -I$(ASTDIR) -I$(VISITORDIR) -I. $(DEBUG)
-CSTD = -std=c99
 CXXSTD = -std=c++11 $(DARWIN)
+CSTD = -std=c99
 
+CXXFLAGS = -Wall -O0 $(CXXSTD) $(DEBUG)
+CFLAGS = -Wall -O0 $(CSTD)  $(DEBUG)
 
 EXE = svar
 
 
-CPPOBJ = main data command_arguments
+CPPOBJ = main command_arguments command_option_base
 
 LIBS = 
 FILES = $(addsuffix .cpp, $(CPPOBJ))

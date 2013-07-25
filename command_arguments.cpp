@@ -26,13 +26,15 @@
 #include <cassert>
 
 #include "command_arguments.h"
-#include "signalhooks.hpp"
 
 
 
-CmdArgs::CmdArgs(const std::string n, Raft::Data &d)
+CmdArgs::CmdArgs(const std::string n, 
+                 std::ostream &user,
+                 std::ostream &err )
    : name( n ),
-     data( d )
+     userstream( user ),
+     errorstream( err )
 {
   /* nothing to do here, move along */
 }
@@ -48,7 +50,7 @@ void CmdArgs::printArgs(){
    for_each( options.begin(),
              options.end(),
              [&]( OptionBase *option ){ 
-                  data.get_userstream() << 
+                  userstream << 
                         option->toString() << std::endl; } );
    std::cout << "End Options" << std::endl;
    std::cout << stars << std::endl;
@@ -75,9 +77,8 @@ void CmdArgs::processArgs(int argc, char **argv){
           const bool success( (*it)->setValue(  argv[i]  ) );
           if( success != true )
           {
-             data.get_rf_errorstream() << "Invalid input for flag (" <<
+             errorstream << "Invalid input for flag (" <<
                 (*it)->get_flag() << ") : " << argv[i] << "\n";
-             raise( TERM_ERR_SIG );
           }
           goto END;
        }
@@ -87,12 +88,12 @@ void CmdArgs::processArgs(int argc, char **argv){
    }
    
    if(! ignored_options.empty() ){
-      data.get_errorstream() << 
-         "The following options were unknown and ignored: " << std::endl;
+      errorstream << 
+         "The following options were unknown and ignored: \n";
    }
    while(! ignored_options.empty() ){
       std::string option = ignored_options.front();
       ignored_options.pop();
-      data.get_errorstream() << option << std::endl;
+      errorstream << option << std::endl;
    }
 }

@@ -16,10 +16,15 @@
 /** One static struct for all **/
 static ProcSettings settings;
 
+
 int
 main( int argc, char **argv )
 {
-   CmdArgs cmd;
+   /* get command line arguments */
+   CmdArgs cmd( "svar",
+                std::cout,
+                std::cerr );
+
    /* add help option */
    bool help( false );
    cmd.addOption( 
@@ -43,9 +48,18 @@ main( int argc, char **argv )
                                 "Which processor to run on" ) );
    /* set service time */
    cmd.addOption( 
-         new Option< double >( settings.
+         new Option< double >( settings.run_length,
+                               "-mu",
+                               "Set service time in seconds (double val)" ));
+   /* process args */
+   cmd.processArgs( argc, argv );
+
+   /* check help */
+   if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
    /** START FORKING **/
    pid_t child_id( EXIT_FAILURE );
    
+
+
    return( EXIT_SUCCESS );
 }
