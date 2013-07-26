@@ -11,10 +11,9 @@
 #include "command_option_single.tcc"
 #include "command_option_multiple.tcc"
 
-#include "datadefs.hpp"
+#include "process.hpp"
+#include "heavy_process.hpp"
 
-/** One static struct for all **/
-static ProcSettings settings;
 
 
 int
@@ -26,7 +25,7 @@ main( int argc, char **argv )
                 std::cerr );
 
    /* add help option */
-   bool help( false );
+   static bool help( false );
    cmd.addOption( 
          new Option< bool >( help,
                              "-h",
@@ -38,7 +37,7 @@ main( int argc, char **argv )
                              true ) );
    /* add number of prcesses option */                             
    cmd.addOption( 
-         new Option< int64_t >( settings.num_children,
+         new Option< int64_t >( number_children,
                                 "-p#",
                                 "Number of processes to spawn" ) );
    /* add set processor option */
@@ -56,10 +55,6 @@ main( int argc, char **argv )
 
    /* check help */
    if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
-   /** START FORKING **/
-   pid_t child_id( EXIT_FAILURE );
    
-
-
    return( EXIT_SUCCESS );
 }
