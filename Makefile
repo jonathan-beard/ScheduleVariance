@@ -18,14 +18,14 @@ CFLAGS = -Wall -O0 $(CSTD)  $(DEBUG)
 EXE = svar
 
 
-CPPOBJ = main command_arguments command_option_base
+CPPOBJ = main command_arguments command_option_base heavy_process process
 
 LIBS = 
 FILES = $(addsuffix .cpp, $(CPPOBJ))
 OBJS  = $(addsuffix .o, $(CPPOBJ))
 
 
-CLEANLIST =  $(OBJS)\
+CLEANLIST =  $(OBJS) $(EXE)\
 
 .PHONY: all
 all:  $(EXE)

@@ -1,4 +1,13 @@
 #include "process.hpp"
 
-#include "command_arguments.h"
-#include "
+
+
+Process::Process( CmdArgs &cmd ) : cmd_args( cmd )
+{
+   /* nothing really to do here */
+}
+
+Process::~Process()
+{
+   /* nothing really to do here */
+}

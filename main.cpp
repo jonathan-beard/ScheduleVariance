@@ -14,6 +14,7 @@
 #include "process.hpp"
 #include "heavy_process.hpp"
 
+#include "load.hpp"
 
 
 int
@@ -35,26 +36,21 @@ main( int argc, char **argv )
                                  return( true );
                              },
                              true ) );
-   /* add number of prcesses option */                             
-   cmd.addOption( 
-         new Option< int64_t >( number_children,
-                                "-p#",
-                                "Number of processes to spawn" ) );
-   /* add set processor option */
-   cmd.addOption(
-         new Option< int64_t >( settings.which_processor,
-                                "-core#",
-                                "Which processor to run on" ) );
-   /* set service time */
-   cmd.addOption( 
-         new Option< double >( settings.run_length,
-                               "-mu",
-                               "Set service time in seconds (double val)" ));
+  
+   /* initialize processes & tests */
+   Process *process( nullptr );
+   Load    *load( nullptr );
+
+   process = new HeavyProcess( cmd );
+   assert( process != nullptr );
+
    /* process args */
    cmd.processArgs( argc, argv );
 
    /* check help */
    if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
-   
+
+   process->Launch();
+
    return( EXIT_SUCCESS );
-}
+

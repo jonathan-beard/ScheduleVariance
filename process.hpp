@@ -6,11 +6,17 @@
 #ifndef _PROCESS_HPP_
 #define _PROCESS_HPP_  1
 
-class  CmdArgs;
+#include <ostream>
+#include "command_arguments.h"
+#include "command_option_base.hpp"
+#include "command_option_single.tcc"
+#include "command_option_multiple.tcc"
+
 
 class Process {
 public:
    Process( CmdArgs &cmd );
+   virtual ~Process();
    virtual void Launch( ) = 0;
    virtual std::ostream& Print( std::ostream &stream ) = 0;
 
