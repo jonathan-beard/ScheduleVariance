@@ -12,7 +12,7 @@
 /* static initializers */
 int64_t HeavyProcess::spawn = 0;
 /* might want to update this later to check interrupt mask */ 
-int64_t HeavyProcess::assigned_processor = 0;
+int64_t HeavyProcess::assigned_processor = 1;
 /* default is multi-level q on most systems */
 int64_t HeavyProcess::schedule = SCHED_OTHER; 
 
@@ -75,12 +75,38 @@ HeavyProcess::Launch( )
    auto sch_ret_val( sched_setscheduler(0x0 /* this */,
                                         HeavyProcess::schedule,
                                         &sp ) );
-   if( sch_ret_val )
+   if( sch_ret_val == EXIT_FAILURE )
    {
       perror( "Failed to set scheduler" );
       exit( EXIT_FAILURE );
    }
 
+   /* pin processor */
+   /* the cpuset should be inherited by forked processes */
+   cpu_set_t   *cpuset( nullptr );
+   const int8_t processes_to_allocate( 1 );
+#if   (__GLIBC_MINOR__ > 9 ) && (__GLIBC__ == 2 )
+   cpuset = CPU_ALLOC( processes_to_allocate );
+   assert( cpuset != nullptr );
+   const size_t cpu_allocate_size( CPU_ALLOC_SIZE( processes_to_allocate ) );
+   CPU_ZERO_S( cpu_allocate_size, cpuset );
+#else
+   cpuset = (cpu_set_t*) malloc( sizeof( cpu_set_t ) );
+   assert( cpuset != nullptr );
+   CPU_ZERO( cpuset );
+#endif
+   CPU_SET( HeavyProcess::assigned_processor,
+            cpuset );
+   auto setaffinity_ret_val( EXIT_SUCCESS );
+   errno = EXIT_SUCCESS;
+   setaffinity_ret_val = sched_setaffinity( 0 /* self */,
+                                            sizeof( cpu_set_t ),
+                                            cpuset );
+   if( setaffinity_ret_val == EXIT_FAILURE )
+   {
+      perror( "Failed to set processor affinity" );
+      exit( EXIT_FAILURE );
+   }
    pid_t child( 0 ); 
    for( int64_t j( 1 ); j < HeavyProcess::spawn; j++ )
    {

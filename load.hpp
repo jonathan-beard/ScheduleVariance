@@ -16,7 +16,12 @@
 class Load {
 public:
    Load( CmdArgs &args );
-   virtual void Load() = 0;
+   virtual ~Load();
+   virtual void Run() = 0;
+   virtual std::ostream& Print( std::ostream &stream ) = 0;
+   virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
+protected:
+   CmdArgs &cmd_args;
 };
 
 #endif /* END _LOAD_HPP_ */

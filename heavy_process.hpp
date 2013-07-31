@@ -27,7 +27,6 @@ protected:
    static int64_t spawn;
    static int64_t assigned_processor;
    static int64_t schedule;
-
 private:
    std::vector< pid_t > *list; 
 };

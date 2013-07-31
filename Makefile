@@ -18,11 +18,14 @@ CFLAGS = -Wall -O0 $(CSTD)  $(DEBUG)
 EXE = svar
 
 
-CPPOBJ = main command_arguments command_option_base heavy_process process
+CPPOBJ = main command_arguments command_option_base heavy_process process \
+			load noop_loop
 
-LIBS = 
-FILES = $(addsuffix .cpp, $(CPPOBJ))
-OBJS  = $(addsuffix .o, $(CPPOBJ))
+COBJ	= system_query			
+
+LIBS = -lrt
+FILES = $(addsuffix .cpp, $(CPPOBJ)) $(addsuffix .c, $(COBJ) )
+OBJS  = $(addsuffix .o, $(CPPOBJ)) $(addsuffix .o, $(COBJ) )
 
 
 CLEANLIST =  $(OBJS) $(EXE)\
@@ -32,7 +35,7 @@ all:  $(EXE)
 
 $(EXE): $(FILES)
 	$(MAKE) $(OBJS)
-	$(CXX) $(CXXFLAGS) $(CXXSTD) -o $(EXE) $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(EXE) $(OBJS) $(LIBS)
 
 
 .PHONY: clean
