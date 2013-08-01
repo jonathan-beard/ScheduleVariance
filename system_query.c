@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+/* should include this for std=c99 */
+#include <alloca.h>
 #include <stdint.h>
+#include <errno.h>
 #include <inttypes.h>
+#include <assert.h>
+#include <string.h>
 
 #if (__APPLE__ == 1)
 #include <sys/sysctl.h>
@@ -17,7 +22,7 @@
 #include "system_query.h"
 
 #ifndef USEPROCCPUINFO
-#define USEPROCCPUINFO 0
+#define USEPROCCPUINFO 1
 #endif
 
 /* forward declarations */
@@ -60,21 +65,28 @@ inline uint32_t n_processors(){
 inline clock_t getStatedCPUFrequency(){
 #ifdef __linux__
 #if (USEPROCCPUINFO == 1)
-   FILE  *fp;
+   FILE  *fp = NULL;
+   errno = 0;
    fp = fopen("/proc/cpuinfo", "r");
-   if(fd == NULL)
+   if(fp == NULL)
    {
-      fprintf(stderr,"Failed to read proc/cpuinfo!!\n");
-      return (-1);
+      perror( "Failed to read proc/cpuinfo!!\n" );
+      return( EXIT_FAILURE );
    }
-   char *key = (char*) alloca(sizeof(char) * 20);
-   char *value (char*) alloca(sizeof(char) * 20);
+   const size_t buff_size = 20;
+   char *key = (char*) alloca(sizeof(char) * buff_size);
+   char *value = (char*) alloca(sizeof(char) * buff_size);
+   assert( key != NULL );
+   assert( value != NULL );
+   memset( key, '\0', buff_size );
+   memset( value, '\0', buff_size );
+
    while(2 != fscanf(fp,"%s : %s\n", key, value))
    {
       fprintf(stderr,"Key: %s - Value: %s\n",key, value);
    }
-   fclose(fd);
-   exit(0);
+   
+   fclose( fp );
 #else
    return ((clock_t)__get_clockfreq());
 #endif
@@ -88,8 +100,11 @@ inline clock_t getStatedCPUFrequency(){
    return (freq);
 #else
 #warning getStatedCPUFrequency undefined for this platform!!
-   return (-1);
+   assert( false );
+   return ( EXIT_FAILURE );
 #endif
+   /* keep the compiler happy */
+   return( EXIT_SUCCESS );
 }
 
 inline clock_t getStatedBusFrequency(){
