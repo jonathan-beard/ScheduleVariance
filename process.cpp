@@ -11,3 +11,15 @@ Process::~Process()
 {
    /* nothing really to do here */
 }
+
+bool
+Process::Ready()
+{
+   return( true );
+}
+
+bool
+Process::Reset()
+{
+   return( false );
+}

@@ -1,38 +1,48 @@
 /**
- * heavy_process.cpp - 
+ * heavy_process.hpp - 
  * @author: Jonathan Beard
  * @version: Thu Jul 25 17:03:38 2013
  */
-#include "heavy_process.hpp"
+#ifndef _HEAVY_PROCESS_HPP_
+#define _HEAVY_PROCESS_HPP_  1
+
+#include <cstdint>
+#include <vector>
+
+#include <sys/types.h>
 #include <sched.h>
 #include <signal.h>
 #include <unistd.h>
 #include <sys/types.h>
 
-/* static initializers */
-int64_t HeavyProcess::spawn = 0;
-/* might want to update this later to check interrupt mask */ 
-int64_t HeavyProcess::assigned_processor = 1;
-/* default is multi-level q on most systems */
-int64_t HeavyProcess::schedule = SCHED_OTHER; 
 
-HeavyProcess::HeavyProcess(CmdArgs &cmd) : 
-                               Process( cmd ),
-                               list( nullptr )
+#include "process.hpp"
+
+class CmdArgs;
+
+template <class LoadType> class HeavyProcess : public Process {
+public:
+HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
+                               spawn( 1 ),
+                               assigned_processor( 1 ),
+                               schedule( SCHED_OTHER ),
+                               child( false ),
+                               list( nullptr ),
+                               load_type( cmd )
 {
    /* register cmd arguments */
    cmd_args.addOption( 
-         new Option< int64_t >( HeavyProcess::spawn,
+         new Option< int64_t >( spawn,
                                 "-p#",
                                 "Number of processes to spawn" ) );
    /* add set processor option */
    cmd_args.addOption(
-         new Option< int64_t >( HeavyProcess::assigned_processor,
+         new Option< int64_t >( assigned_processor,
                                 "-core#",
                                 "Which processor to run on" ) );
 
    cmd_args.addOption(
-         new Option< int64_t >( HeavyProcess::schedule,
+         new Option< int64_t >( schedule,
                                 "-sched",
                          std::string("Schedule, should be one of: SCHED_OTHER,")+
                          std::string("SCHED_FIFO,SCHED_RR"),
@@ -56,15 +66,17 @@ HeavyProcess::HeavyProcess(CmdArgs &cmd) :
                                     return( SCHED_OTHER );
                                 }) );
 
+   /* this will be for the parent process only */                                
+   list = new std::vector< pid_t >();
 }
 
-HeavyProcess::~HeavyProcess()
+virtual ~HeavyProcess()
 {
-   /* nothing really to do here */
+
 }
 
-void
-HeavyProcess::Launch( )
+
+virtual void Launch()
 {
    /* schedule can be inherited so lets do it here for all */
    errno = EXIT_SUCCESS;
@@ -73,7 +85,7 @@ HeavyProcess::Launch( )
    errno = EXIT_SUCCESS;
    const struct sched_param sp = { .sched_priority = priority };
    auto sch_ret_val( sched_setscheduler(0x0 /* this */,
-                                        HeavyProcess::schedule,
+                                        schedule,
                                         &sp ) );
    if( sch_ret_val == EXIT_FAILURE )
    {
@@ -95,7 +107,7 @@ HeavyProcess::Launch( )
    assert( cpuset != nullptr );
    CPU_ZERO( cpuset );
 #endif
-   CPU_SET( HeavyProcess::assigned_processor,
+   CPU_SET( assigned_processor,
             cpuset );
    auto setaffinity_ret_val( EXIT_SUCCESS );
    errno = EXIT_SUCCESS;
@@ -108,7 +120,7 @@ HeavyProcess::Launch( )
       exit( EXIT_FAILURE );
    }
    pid_t child( 0 ); 
-   for( int64_t j( 1 ); j < HeavyProcess::spawn; j++ )
+   for( int64_t j( 1 ); j < spawn; j++ )
    {
       child = fork();
       switch( child )
@@ -117,6 +129,8 @@ HeavyProcess::Launch( )
          {  
             /* go to end */
             fprintf(stderr, "spawn\n");
+            /* tell yourself you're a child */
+            child = true;
             goto END;
          }
          break;
@@ -135,6 +149,7 @@ HeavyProcess::Launch( )
             if( err_str.length() > 0 )
             {
                std::cerr << err_str << "\n";
+               
             }
             exit( EXIT_FAILURE );
          }
@@ -150,12 +165,38 @@ HeavyProcess::Launch( )
          }
       }
    }
-   END:; /* goto empty statement */
+   END:;
+   /* all processes will set their reset mark to zero */
+   Reset();
+   while( ! the_load.done() )
+   {
+       
+   }
 }
 
-std::ostream&
-HeavyProcess::Print( std::ostream &stream )
+virtual std::ostream& Print( std::ostream &stream )
 {
    stream << "Not implemented\n"; 
    return( stream );
 }
+
+virtual std::ostream& PrintHeader( std::ostream &stream )
+{
+   stream << "Not implemented\n"; 
+   return( stream );
+}
+
+
+
+protected:
+   int64_t spawn;
+   int64_t assigned_processor;
+   int64_t schedule;
+   bool    child;
+private:
+   /* just remember ptrs are not carried accross fork */
+   std::vector< pid_t > *list; 
+   LoadType              the_load;
+};
+
+#endif /* END _HEAVY_PROCESS_HPP_ */

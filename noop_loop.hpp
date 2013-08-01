@@ -12,11 +12,12 @@
 class NoOpLoop : public Load {
 public:
    NoOpLoop( CmdArgs &args );
+   NoOpLoop( const NoOpLoop &l );
    virtual ~NoOpLoop();
 
    virtual void Run();
    virtual std::ostream& Print( std::ostream &stream );
-
+   virtual std::ostream& PrintHeader( std::ostream &stream );
    enum Distribution { Deterministic, Uniform, Exponential, HyperExponential };
 private:
    int64_t        iterations;

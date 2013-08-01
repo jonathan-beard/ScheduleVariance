@@ -62,3 +62,11 @@ NoOpLoop::Print( std::ostream &stream )
    stream << output.str();
    return( stream );
 }
+
+std::ostream&
+NoOpLoop::PrintHeader( std::ostream &stream )
+{
+   stream << "ServiceTime" << "," << "ExpectedStopTick" << "," << "ActualStopTick"
+      << "\n";
+   return( stream );
+}

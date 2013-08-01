@@ -13,8 +13,8 @@
 
 #include "process.hpp"
 #include "heavy_process.hpp"
-
 #include "load.hpp"
+#include "noop_loop.hpp"
 
 
 int
@@ -39,9 +39,8 @@ main( int argc, char **argv )
   
    /* initialize processes & tests */
    Process *process( nullptr );
-   Load    *load( nullptr );
 
-   process = new HeavyProcess( cmd );
+   process = new HeavyProcess<NoOpLoop>( cmd );
    assert( process != nullptr );
 
    /* process args */
@@ -52,5 +51,9 @@ main( int argc, char **argv )
 
    process->Launch();
 
+   if( process != nullptr )
+   {
+      delete( process );
+   }
    return( EXIT_SUCCESS );
 }

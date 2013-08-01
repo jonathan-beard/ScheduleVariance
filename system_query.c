@@ -80,13 +80,19 @@ inline clock_t getStatedCPUFrequency(){
    assert( value != NULL );
    memset( key, '\0', buff_size );
    memset( value, '\0', buff_size );
-
+   clock_t clock = 0;
    while(2 != fscanf(fp,"%s : %s\n", key, value))
    {
-      fprintf(stderr,"Key: %s - Value: %s\n",key, value);
+      /* TODO, not the best way to get CPU Frequency */
+      if( strncmp( key, "cpu MHz ", 7 ) == 0 )
+      {
+         clock = (clock_t) (atof( value ) * 1e6f );
+         goto END;
+      }
    }
-   
+END:   
    fclose( fp );
+   return( clock );
 #else
    return ((clock_t)__get_clockfreq());
 #endif
