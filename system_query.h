@@ -6,17 +6,25 @@
 #define L2 3
 #define L3 4
 
-extern inline uint32_t n_processors();
+#ifdef __cplusplus
+extern "C"{
+#endif
 
-extern inline clock_t getStatedCPUFrequency();
 
-extern inline clock_t getStatedBusFrequency();
+uint32_t n_processors();
 
-extern inline size_t getCacheLineSize();
+clock_t getStatedCPUFrequency();
 
-extern inline size_t getCacheSize(const uint8_t level);
+clock_t getStatedBusFrequency();
 
-extern inline uint64_t readTimeStampCounter();
+size_t getCacheLineSize();
 
-extern inline void forcePreviousInstructionsToComplete();
+size_t getCacheSize(const uint8_t level);
 
+uint64_t readTimeStampCounter();
+
+void forcePreviousInstructionsToComplete();
+
+#ifdef __cplusplus
+}
+#endif

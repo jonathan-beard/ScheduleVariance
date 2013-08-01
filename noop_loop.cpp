@@ -60,4 +60,5 @@ std::ostream&
 NoOpLoop::Print( std::ostream &stream )
 {
    stream << output.str();
+   return( stream );
 }
