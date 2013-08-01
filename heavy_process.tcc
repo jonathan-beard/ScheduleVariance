@@ -14,7 +14,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/types.h>
-
+#include "shm.hpp"
+#define SHM_KEY_LENGTH 100;
 
 #include "process.hpp"
 
@@ -28,7 +29,8 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                schedule( SCHED_OTHER ),
                                child( false ),
                                list( nullptr ),
-                               load_type( cmd )
+                               load_type( cmd ),
+                               process_status( nullptr );
 {
    /* register cmd arguments */
    cmd_args.addOption( 
@@ -68,6 +70,7 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
 
    /* this will be for the parent process only */                                
    list = new std::vector< pid_t >();
+   InitSHM();
 }
 
 virtual ~HeavyProcess()
@@ -187,6 +190,25 @@ virtual std::ostream& PrintHeader( std::ostream &stream )
 }
 
 
+virtual bool Ready()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   /* we have to wait till everyone is ready */
+   for( int64_t index( 0 ); index < spawn; index++ )
+   {
+      if( process_status[ index ] != READY )
+         return( false );
+   }
+   return( true );
+}
+
+virtual bool Reset()
+{
+
+}
 
 protected:
    int64_t spawn;
@@ -194,9 +216,31 @@ protected:
    int64_t schedule;
    bool    child;
 private:
+
+void InitSHM()
+{
+   /* set SHM key for all sub-processes of this process to open */
+   memset( &shm_key, '\0', SHM_KEY_LENGTH );
+   srand( NULL );
+   int key( rand() );
+   /* print the key to shm_key */
+   snprintf( &shm_key, SHM_KEY_LENGTH, "%d", key );
+   process_status = SHM::Init( &shm_key,
+                               sizeof( ProcessStatus ),
+                               spawn );
+   assert( process_status != nullptr );
+}
+
    /* just remember ptrs are not carried accross fork */
    std::vector< pid_t > *list; 
    LoadType              the_load;
+   char                  shm_key[ SHM_KEY_LENGTH ];
+   enum ProcessStatus : int8_t { NOTREADY = 0, 
+                                 READY, 
+                                 RUNNING, 
+                                 DONE };
+   /* array for each process to keep their status */
+   ProcessStatus        *process_status;
 };
 
 #endif /* END _HEAVY_PROCESS_HPP_ */
