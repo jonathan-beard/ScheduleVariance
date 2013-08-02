@@ -7,6 +7,7 @@
 #define _SHM_HPP_  1
 
 class SHM{
+public:
    static void*   Init( const char *key, 
                         size_t nbytes,
                         size_t nitems );

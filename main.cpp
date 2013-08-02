@@ -12,7 +12,7 @@
 #include "command_option_multiple.tcc"
 
 #include "process.hpp"
-#include "heavy_process.hpp"
+#include "heavy_process.tcc"
 #include "load.hpp"
 #include "noop_loop.hpp"
 

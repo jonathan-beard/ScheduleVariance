@@ -17,8 +17,8 @@ CFLAGS = -Wall -O0 $(CSTD)  $(DEBUG)
 
 EXE = svar
 
-CPPOBJ = main command_arguments command_option_base heavy_process process \
-			load noop_loop
+CPPOBJ = main command_arguments command_option_base process \
+			load noop_loop shm
 
 COBJ	= system_query			
 

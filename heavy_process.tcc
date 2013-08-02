@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <cassert>
 
 #include <sys/types.h>
 #include <sched.h>
@@ -15,7 +16,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include "shm.hpp"
-#define SHM_KEY_LENGTH 100;
+
+
+#define SHM_KEY_LENGTH 100
 
 #include "process.hpp"
 
@@ -241,34 +244,22 @@ virtual bool ResetAll()
    return( true );
 }
 
-virtual bool SetRunning()
+virtual void SetRunning()
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
+   assert( process_status == nullptr );
    process_status[ my_id ] = RUNNING;
-   return( true );
 }
 
-virtual bool SetDone()
+virtual void SetDone()
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
+   assert( process_status == nullptr );
    process_status[ my_id ] = DONE;
-   return( true );
 }
 
-virtual bool SetWaiting()
+virtual void SetWaiting()
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
+   assert( process_status == nullptr );
    process_status[ my_id ] = WAITING;
-   return( true );
 }
 
 virtual bool EveryoneDone()
