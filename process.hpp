@@ -19,6 +19,9 @@ public:
    Process( CmdArgs &cmd );
    virtual ~Process();
    virtual void Launch() = 0;
+
+   virtual void SetData( void *ptr, size_t nbytes, int64_t iteration ) = 0;
+
    virtual std::ostream& Print( std::ostream &stream ) = 0;
 
    /**
@@ -28,6 +31,7 @@ public:
     * @return  bool - threads are ready.
     */
    virtual bool Ready();
+   virtual bool AllReady();
    /**
     * Reset - Called by various loads to resest the calling process or thread.
     * @param   bool - reset threads

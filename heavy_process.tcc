@@ -14,6 +14,7 @@
 #include <sched.h>
 #include <signal.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/types.h>
 #include "shm.hpp"
 
@@ -32,9 +33,11 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                schedule( SCHED_OTHER ),
                                child( false ),
                                list( nullptr ),
-                               load_type( cmd ),
+                               the_load( cmd ),
                                process_status( nullptr ),
-                               my_id( 0 )
+                               data( nullptr ),
+                               my_id( 0 ),
+                               data_size( 0 )
 {
    /* register cmd arguments */
    cmd_args.addOption( 
@@ -74,13 +77,20 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
 
    /* this will be for the parent process only */                                
    list = new std::vector< pid_t >();
-   InitSHM();
+   InitSyncSHM();
+   data_size = the_load.GetDataStructSize();
+   InitDataSHM();
 }
 
 virtual ~HeavyProcess()
 {
    if( list != nullptr ) delete( list );
    list = nullptr;
+   if( process_status != nullptr )
+   {
+      SHM::Close( shm_key );
+   }
+   process_status = nullptr;
 }
 
 
@@ -139,8 +149,13 @@ virtual void Launch()
             child = true;
             /* open SHM */
             process_status = nullptr;
-            process_status = SHM::Open( &shm_key );
+            process_status = (HeavyProcess<LoadType>::ProcessStatus*) 
+                              SHM::Open( shm_key_sync );
             assert( process_status != nullptr );
+
+            data = NULL;
+            data = SHM::Open( shm_key_data );
+            assert( data != NULL );
             my_id = j;
             goto END;
          }
@@ -178,12 +193,16 @@ virtual void Launch()
    }
    END:;
    /* all processes will set their reset mark to zero, eventually */
-   Reset();
-   while( ! AllReady() ); /* spin */
+   assert( Reset() == true );
+   while( ! AllReady() )
+   {
+      continue;
+   }
    /* lets do something, the load will control the process */
    the_load.Run( *this );
    /* control is now back to here, shutdown shm */
    SHM::Close( shm_key );
+   if( child ) exit( EXIT_SUCCESS );
 }
 
 virtual std::ostream& Print( std::ostream &stream )
@@ -198,8 +217,30 @@ virtual std::ostream& PrintHeader( std::ostream &stream )
    return( stream );
 }
 
+virtual void SetData( void *ptr, size_t nbytes, int64_t iteration )
+{
+   size_t index( 0 );
+   if( my_id == 0 )
+   {
+      index = iteration;
+   }
+   else
+   {
+      index = ( my_id * iteration ) + 1;
+   }
+   memcpy( &(data[index]), ptr, nbytes );
+}
 
 virtual bool Ready()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   return( process_status[ my_id ] == READY );
+}
+
+virtual bool AllReady()
 {
    if( process_status == nullptr )
    {
@@ -246,19 +287,19 @@ virtual bool ResetAll()
 
 virtual void SetRunning()
 {
-   assert( process_status == nullptr );
+   assert( process_status != nullptr );
    process_status[ my_id ] = RUNNING;
 }
 
 virtual void SetDone()
 {
-   assert( process_status == nullptr );
+   assert( process_status != nullptr );
    process_status[ my_id ] = DONE;
 }
 
 virtual void SetWaiting()
 {
-   assert( process_status == nullptr );
+   assert( process_status != nullptr );
    process_status[ my_id ] = WAITING;
 }
 
@@ -295,24 +336,41 @@ protected:
    bool    child;
 
 private:
-void InitSHM()
+void InitSyncSHM()
 {
    /* set SHM key for all sub-processes of this process to open */
-   memset( &shm_key, '\0', SHM_KEY_LENGTH );
-   srand( NULL );
+   memset( &shm_key_sync, '\0', SHM_KEY_LENGTH );
+   srand( time( nullptr ) );
    int key( rand() );
    /* print the key to shm_key */
-   snprintf( &shm_key, SHM_KEY_LENGTH, "%d", key );
-   process_status = SHM::Init( &shm_key,
+   snprintf( shm_key_sync, SHM_KEY_LENGTH, "%d", key );
+   process_status = (HeavyProcess<LoadType>::ProcessStatus*)
+                    SHM::Init( shm_key_sync,
                                sizeof( ProcessStatus ),
                                spawn );
    assert( process_status != nullptr );
 }
 
+void InitDataSHM()
+{
+   /* set SHM key for all sub-processes of this process to open */
+   memset( &shm_key_data, '\0', SHM_KEY_LENGTH );
+   srand( time( nullptr ) );
+   int key( rand() );
+   /* print the key to shm_key */
+   snprintf( shm_key_data, SHM_KEY_LENGTH, "%d", key );
+   size_t iterations = the_load.GetNumIterations();
+   data = (char*) SHM::Init( shm_key_data,
+                             data_size,
+                             iterations * spawn );
+   assert( data != nullptr );
+}
+
    /* just remember ptrs are not carried accross fork */
    std::vector< pid_t > *list; 
    LoadType              the_load;
-   char                  shm_key[ SHM_KEY_LENGTH ];
+   char                  shm_key_sync[ SHM_KEY_LENGTH ];
+   char                  shm_key_data[ SHM_KEY_LENGTH ];
    enum ProcessStatus : int8_t { NOTREADY = 0, 
                                  READY, 
                                  RUNNING, 
@@ -320,7 +378,9 @@ void InitSHM()
                                  DONE };
    /* array for each process to keep their status */
    ProcessStatus        *process_status;
+   char                 *data;
    int64_t              my_id;
+   size_t               data_size;
 };
 
 #endif /* END _HEAVY_PROCESS_HPP_ */

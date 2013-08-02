@@ -14,7 +14,7 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
                                       deterministic( true ),
                                       distribution( Deterministic ),
                                       mean_ticks_to_spin( 0 ),
-                                      done( false );
+                                      frequency( 0 )
 {
    /* add specific command line arguments */
    cmd_args.addOption( 
@@ -37,7 +37,13 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
  "Set the distribution, string of: (Deterministic,Uniform,Exponential,HyperExponential" ) );
 
    /* set mean ticks to spin */
-   mean_ticks_to_spin = ( service_time * getStatedCPUFrequency() );
+   frequency = getStatedCPUFrequency();
+   mean_ticks_to_spin = ( service_time * frequency );
+}
+
+NoOpLoop::~NoOpLoop()
+{
+   /* nothing to do */
 }
 
 void
@@ -59,34 +65,30 @@ NoOpLoop::Run( Process &p )
                               :
                          );
       }
-      /* we're done with out not so serious load */
-      /* dump output */
-      output << service_time << "," << tick_to_stop_on << "," << final_ticks 
-            << "\n";
       p.SetWaiting();
       /* wait for everyone to be waiting */
-      while( ! p.EveryoneWaiting() );
+      while( ! p.EveryoneWaiting() )
+      {
+         continue;
+      }
    }
    p.SetDone();
 }
-
-bool
-NoOpLoop::Done()
+size_t 
+NoOpLoop::GetDataStructSize()
 {
-   return( done );
+   /* gotta know in advance what your output will be */
+   return( sizeof( double ) + sizeof( uint64_t ) + sizeof( uint64_t ) );
 }
 
-std::ostream&
-NoOpLoop::Print( std::ostream &stream )
+size_t 
+NoOpLoop::GetNumIterations()
 {
-   stream << output.str();
-   return( stream );
+
 }
 
-std::ostream&
-NoOpLoop::PrintHeader( std::ostream &stream )
-{
-   stream << "ServiceTime" << "," << "ExpectedStopTick" << "," << "ActualStopTick"
-      << "\n";
-   return( stream );
+std::ostream& 
+NoOpLoop::ReadData( std::ostream &stream,
+                    char *ptr )
+{                    
 }

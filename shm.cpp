@@ -6,23 +6,27 @@
 #include "shm.hpp"
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
+
+#include <iostream>
 
 void*
 SHM::Init( const char *key,
            size_t nbytes /* bytes for each item */,
            size_t items  /* total number of items */)
 {
-   int fd( EXIT_FAILURE );
-   struct stat st;
-   memset( &st, 0x0, sizeof( struct stat ) );
+   int fd( -1  );
    /* TODO fix this with the correct errno code */
-   if( stat( key, &st ) != EXIT_FAILURE )
+   if( access( key, F_OK ) == EXIT_SUCCESS )
    {
       fprintf( stderr, "File exists, returning!!\n" );
       return( NULL );
@@ -32,8 +36,10 @@ SHM::Init( const char *key,
    /* set read/write by user */
    const mode_t mode( S_IWUSR | S_IRUSR );
    errno = 0;
-   fd  = shm_open( key, flags , mode );
-   if( fd == EXIT_FAILURE )
+   fd  = shm_open( key, 
+                   flags, 
+                   mode );
+   if( fd == -1 )
    {
       perror( "Failed to open shared memory!!" );
       /* return, just in case the user did something that needs
@@ -44,7 +50,7 @@ SHM::Init( const char *key,
    /* else begin truncate */
    size_t size( nbytes * items );
    errno = 0;
-   if( ftruncate( fd, size ) == EXIT_FAILURE )
+   if( ftruncate( fd, size ) != EXIT_SUCCESS )
    {
       perror( "Failed to truncate shm!!\n" );
       /* unlink the SHM and return null */
@@ -54,7 +60,12 @@ SHM::Init( const char *key,
    /* else begin mmap */
    errno = 0;
    void *out( NULL );
-   out = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0 );
+   out = mmap( NULL, 
+               size, 
+               ( PROT_READ | PROT_WRITE ), 
+               MAP_SHARED, 
+               fd, 
+               0 );
    if( out == MAP_FAILED )
    {
       perror( "Failed to mmap shm region, unlinking and returning!!" );

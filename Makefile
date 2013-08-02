@@ -17,6 +17,8 @@ CFLAGS = -Wall -O0 $(CSTD)  $(DEBUG)
 
 EXE = svar
 
+LIBS = -lrt
+
 CPPOBJ = main command_arguments command_option_base process \
 			load noop_loop shm
 

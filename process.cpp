@@ -19,6 +19,12 @@ Process::Ready()
 }
 
 bool
+Process::AllReady()
+{
+   return( true );
+}
+
+bool
 Process::Reset()
 {
    return( false );

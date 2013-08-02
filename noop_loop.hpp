@@ -17,8 +17,12 @@ public:
    virtual ~NoOpLoop();
 
    virtual void Run( Process &p );
-   virtual std::ostream& Print( std::ostream &stream );
-   virtual std::ostream& PrintHeader( std::ostream &stream );
+   virtual size_t GetDataStructSize();
+   virtual size_t GetNumIterations();
+
+   virtual std::ostream& ReadData( std::ostream &stream,
+                                   char *ptr );
+
    enum Distribution { Deterministic, Uniform, Exponential, HyperExponential };
 private:
    int64_t        iterations;
@@ -27,6 +31,7 @@ private:
    int64_t        distribution;
    uint64_t       mean_ticks_to_spin;
    std::stringstream    output;
+   uint64_t       frequency;
 }; 
 
 #endif /* END _NOOP_LOOP_HPP_ */

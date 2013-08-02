@@ -81,13 +81,16 @@ inline clock_t getStatedCPUFrequency(){
    memset( key, '\0', buff_size );
    memset( value, '\0', buff_size );
    clock_t clock = 0;
-   while(2 != fscanf(fp,"%s : %s\n", key, value))
+   int count = EOF;
+   while( ( count = fscanf(fp,"%[^:]:%[^\n]\n", key, value) ) != EOF )
    {
-      /* TODO, not the best way to get CPU Frequency */
-      if( strncmp( key, "cpu MHz ", 7 ) == 0 )
-      {
-         clock = (clock_t) (atof( value ) * 1e6f );
-         goto END;
+      if( count == 2 ){
+         /* TODO, not the best way to get CPU Frequency */
+         if( strncmp( key, "cpu MHz", 7 ) == 0 )
+         {
+            clock = (clock_t) (atof( value ) * 1e6f );
+            goto END;
+         }
       }
    }
 END:   
