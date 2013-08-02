@@ -206,8 +206,22 @@ virtual bool Ready()
 }
 
 virtual bool Reset()
-{
-
+{  
+   /* TODO - decide if this is the intended behavior */
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   for( int64_t index( 0 ); index < spawn; index++ )
+   {
+      if( process_status[ index ] != DONE ){ 
+         return( false );
+      }
+   }
+   for( int64_t index( 0 ); index < spawn; index++ )
+   {
+      process_status[ index ] = READY;
+   }
 }
 
 protected:
