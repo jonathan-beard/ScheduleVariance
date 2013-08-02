@@ -29,10 +29,20 @@ public:
     */
    virtual bool Ready();
    /**
-    * Reset - Called by various loads to resest all processes or threads.
+    * Reset - Called by various loads to resest the calling process or thread.
     * @param   bool - reset threads
     */
    virtual bool Reset();
+
+   virtual bool ResetAll();
+
+   virtual void SetRunning();
+   virtual void SetDone();
+   virtual void SetWaiting();
+
+   virtual bool EveryoneDone();
+   virtual bool EveryoneWaiting();
+
 protected:
    CmdArgs &cmd_args;
 };

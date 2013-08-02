@@ -4,6 +4,8 @@
  * @version: Thu Jul 25 17:04:00 2013
  */
 #include "noop_loop.hpp"
+#include "process.hpp"
+
 #include "system_query.h"
 
 NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
@@ -11,7 +13,8 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
                                       service_time( 60 ),
                                       deterministic( true ),
                                       distribution( Deterministic ),
-                                      mean_ticks_to_spin( 0 )
+                                      mean_ticks_to_spin( 0 ),
+                                      done( false );
 {
    /* add specific command line arguments */
    cmd_args.addOption( 
@@ -38,22 +41,39 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
 }
 
 void
-NoOpLoop::Run()
-{
-   /* initialize timers */
-   const uint64_t tick_to_stop_on( mean_ticks_to_spin + readTimeStampCounter() );
-   /* TODO add variable distribution bit here, set outside of loop */
-   volatile uint64_t final_ticks( 0 );
-   while( tick_to_stop_on >= (final_ticks = readTimeStampCounter() ) )
-   {
-      __asm__ volatile("\
-                           nop"
-                           :
-                           :
-                      );
+NoOpLoop::Run( Process &p )
+{  
+   for( int64_t it_index( 0 ); it_index < iterations; it_index++ )
+   {  
+      p.SetRunning();
+      /* initialize timers */
+      const uint64_t tick_to_stop_on( 
+            mean_ticks_to_spin + readTimeStampCounter() );
+      /* TODO add variable distribution bit here, set outside of loop */
+      volatile uint64_t final_ticks( 0 );
+      while( tick_to_stop_on >= (final_ticks = readTimeStampCounter() ) )
+      {
+         __asm__ volatile("\
+                              nop"
+                              :
+                              :
+                         );
+      }
+      /* we're done with out not so serious load */
+      /* dump output */
+      output << service_time << "," << tick_to_stop_on << "," << final_ticks 
+            << "\n";
+      p.SetWaiting();
+      /* wait for everyone to be waiting */
+      while( ! p.EveryoneWaiting() );
    }
-   /* dump output */
-   output << service_time << "," << tick_to_stop_on << "," << final_ticks << "\n";
+   p.SetDone();
+}
+
+bool
+NoOpLoop::Done()
+{
+   return( done );
 }
 
 std::ostream&

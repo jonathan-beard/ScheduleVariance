@@ -23,3 +23,39 @@ Process::Reset()
 {
    return( false );
 }
+
+bool
+Process::ResetAll()
+{
+   return( false );
+}
+
+void 
+Process::SetRunning()
+{
+   /* empty */
+}
+
+void
+Process::SetDone()
+{
+   /* empty */
+}
+
+void 
+Process::SetWaiting()
+{
+   /* empty */
+}
+
+bool
+Process::EveryoneDone()
+{
+   return( false );
+}
+
+bool
+Process::EveryoneWaiting()
+{
+   return( false );
+}

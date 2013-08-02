@@ -8,6 +8,7 @@
 
 #include "load.hpp"
 
+class Process;
 
 class NoOpLoop : public Load {
 public:
@@ -15,7 +16,7 @@ public:
    NoOpLoop( const NoOpLoop &l );
    virtual ~NoOpLoop();
 
-   virtual void Run();
+   virtual void Run( Process &p );
    virtual std::ostream& Print( std::ostream &stream );
    virtual std::ostream& PrintHeader( std::ostream &stream );
    enum Distribution { Deterministic, Uniform, Exponential, HyperExponential };

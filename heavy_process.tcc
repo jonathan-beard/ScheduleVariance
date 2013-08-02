@@ -30,7 +30,8 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                child( false ),
                                list( nullptr ),
                                load_type( cmd ),
-                               process_status( nullptr );
+                               process_status( nullptr ),
+                               my_id( 0 )
 {
    /* register cmd arguments */
    cmd_args.addOption( 
@@ -75,7 +76,8 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
 
 virtual ~HeavyProcess()
 {
-
+   if( list != nullptr ) delete( list );
+   list = nullptr;
 }
 
 
@@ -130,10 +132,13 @@ virtual void Launch()
       {
          case( 0 /* CHILD */ ):
          {  
-            /* go to end */
-            fprintf(stderr, "spawn\n");
             /* tell yourself you're a child */
             child = true;
+            /* open SHM */
+            process_status = nullptr;
+            process_status = SHM::Open( &shm_key );
+            assert( process_status != nullptr );
+            my_id = j;
             goto END;
          }
          break;
@@ -169,12 +174,13 @@ virtual void Launch()
       }
    }
    END:;
-   /* all processes will set their reset mark to zero */
+   /* all processes will set their reset mark to zero, eventually */
    Reset();
-   while( ! the_load.done() )
-   {
-       
-   }
+   while( ! AllReady() ); /* spin */
+   /* lets do something, the load will control the process */
+   the_load.Run( *this );
+   /* control is now back to here, shutdown shm */
+   SHM::Close( shm_key );
 }
 
 virtual std::ostream& Print( std::ostream &stream )
@@ -206,6 +212,16 @@ virtual bool Ready()
 }
 
 virtual bool Reset()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   process_status[ my_id ] = READY;
+   return( true );
+}
+
+virtual bool ResetAll()
 {  
    /* TODO - decide if this is the intended behavior */
    if( process_status == nullptr )
@@ -222,6 +238,63 @@ virtual bool Reset()
    {
       process_status[ index ] = READY;
    }
+   return( true );
+}
+
+virtual bool SetRunning()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   process_status[ my_id ] = RUNNING;
+   return( true );
+}
+
+virtual bool SetDone()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   process_status[ my_id ] = DONE;
+   return( true );
+}
+
+virtual bool SetWaiting()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   process_status[ my_id ] = WAITING;
+   return( true );
+}
+
+virtual bool EveryoneDone()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   for( int64_t index( 0 ); index < spawn; index++ )
+   {
+      if( process_status[ index ] != DONE ) return( false );
+   }
+   return( true );
+}
+
+virtual bool EveryoneWaiting()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   for( int64_t index( 0 ); index < spawn; index++ )
+   {
+      if( process_status[ index ] != WAITING ) return( false );
+   }
+   return( true );
 }
 
 protected:
@@ -229,8 +302,8 @@ protected:
    int64_t assigned_processor;
    int64_t schedule;
    bool    child;
-private:
 
+private:
 void InitSHM()
 {
    /* set SHM key for all sub-processes of this process to open */
@@ -252,9 +325,11 @@ void InitSHM()
    enum ProcessStatus : int8_t { NOTREADY = 0, 
                                  READY, 
                                  RUNNING, 
+                                 WAITING,
                                  DONE };
    /* array for each process to keep their status */
    ProcessStatus        *process_status;
+   int64_t              my_id;
 };
 
 #endif /* END _HEAVY_PROCESS_HPP_ */

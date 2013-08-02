@@ -13,11 +13,14 @@
 #include "command_option_single.tcc"
 #include "command_option_multiple.tcc"
 
+class Process;
+
 class Load {
 public:
    Load( CmdArgs &args );
    virtual ~Load();
-   virtual void Run() = 0;
+   virtual void Run( Process &p ) = 0;
+   virtual bool Done() = 0;
    virtual std::ostream& Print( std::ostream &stream ) = 0;
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
 protected:

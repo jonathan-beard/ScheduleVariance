@@ -41,6 +41,7 @@ main( int argc, char **argv )
    Process *process( nullptr );
 
    process = new HeavyProcess<NoOpLoop>( cmd );
+
    assert( process != nullptr );
 
    /* process args */
