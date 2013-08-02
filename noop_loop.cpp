@@ -84,11 +84,13 @@ NoOpLoop::GetDataStructSize()
 size_t 
 NoOpLoop::GetNumIterations()
 {
-
+   return( (size_t) iterations );
 }
 
 std::ostream& 
 NoOpLoop::ReadData( std::ostream &stream,
                     char *ptr )
-{                    
+{                  
+   size_t size( GetDataStructSize() );
+   
 }

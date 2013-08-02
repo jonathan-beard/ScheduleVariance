@@ -23,15 +23,23 @@ public:
    virtual std::ostream& ReadData( std::ostream &stream,
                                    char *ptr );
 
-   enum Distribution { Deterministic, Uniform, Exponential, HyperExponential };
+   enum Distribution { Deterministic = 0, 
+                       Uniform, 
+                       Exponential, 
+                       HyperExponential };
 private:
    int64_t        iterations;
-   double         service_time;
    bool           deterministic;
    int64_t        distribution;
    uint64_t       mean_ticks_to_spin;
    std::stringstream    output;
-   uint64_t       frequency;
+
+   struct{
+      double   service_time;
+      uint64_t mean_ticks_to_spin;
+      uint64_t frequency;
+      uint64_t 
+   }data;
 }; 
 
 #endif /* END _NOOP_LOOP_HPP_ */
