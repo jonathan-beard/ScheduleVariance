@@ -234,13 +234,14 @@ virtual void Launch()
       }
    }
    END:;
-   /* all processes will set their reset mark to zero, eventually */
-   assert( Reset() == true );
+   SetReady();
+   std::cerr << "Initialized 1: " << my_id << "\n";
    /* spin until everyone is ready */
    while( ! EveryoneReady() )
    {
       continue;
    }
+   std::cerr << "Initialized 2: " << my_id << "\n";
    /* lets do something, the load will control the process */
    the_load.Run( *this );
    /* control is now back to here, shutdown shm */
@@ -265,14 +266,14 @@ virtual std::ostream& PrintData( std::ostream &stream )
    const int64_t length( spawn * the_load.GetNumIterations() );
    for( int64_t index( 0 ); index < length; index++ )
    {
-      the_load.PrintData( stream, (void*) (&(store->data)[index] )) << "\n";
+      the_load.PrintData( stream, (void*) (&(store->data)[index] ) ) << "\n";
    }
    return( stream );
 }
 
 virtual std::ostream& PrintHeader( std::ostream &stream )
 {
-   stream << the_load.PrintHeader( stream ) << "\n";
+   the_load.PrintHeader( stream ) << "\n";
    return( stream );
 }
 
@@ -293,16 +294,13 @@ virtual void SetReady()
 
 virtual bool EveryoneReady()
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
+   assert( process_status != nullptr );
    /* we have to wait till everyone is ready */
    for( int64_t index( 0 ); index < spawn; index++ )
    {
-      if( process_status[ index ] != READY )
-         return( false );
+      if( process_status[ index ] != READY ) return( false );
    }
+   std::cerr << "True : " << my_id << "\n";
    return( true );
 }
 

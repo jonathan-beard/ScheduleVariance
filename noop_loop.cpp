@@ -38,7 +38,6 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
 
    /* set mean ticks to spin */
    frequency = getStatedCPUFrequency();
-   mean_ticks_to_spin = ( service_time * frequency );
 }
 
 NoOpLoop::~NoOpLoop()
@@ -51,7 +50,7 @@ NoOpLoop::PrintHeader( std::ostream &stream )
 {
    stream << "Load" << "," << "Distribution" << "," << "ServiceTime";
    stream << "," << "Frequency" << "," << "TicksToSpin" << ",";
-   stream << "TargetStopTick" << "," << "ActualStopTick";
+   stream << "TargetStopTick" << "," << "ActualStopTick" << "," << "TickDelta";
    return( stream );
 }
 
@@ -62,16 +61,19 @@ NoOpLoop::PrintData( std::ostream &stream, void *d )
    stream << d_ptr->load_name << "," << d_ptr->distribution << ",";
    stream << d_ptr->service_time << "," << d_ptr->frequency << ",";
    stream << d_ptr->mean_ticks_to_spin << "," << d_ptr->target_stop_tick << ",";
-   stream << d_ptr->actual_stop_tick;
+   stream << d_ptr->actual_stop_tick << ",";
+   stream << ( d_ptr->actual_stop_tick - d_ptr->target_stop_tick );
    return( stream );
 }
 
 void
 NoOpLoop::Run( Process &p )
 {  
+   mean_ticks_to_spin = (uint64_t) ( (double) service_time * 
+                                     (double) frequency );
+
    for( int64_t it_index( 0 ); it_index < iterations; it_index++ )
    {  
-      p.SetRunning();
       /* initialize timers */
       /* readTimeStampCounter will only work on x86 at the moment */
       const uint64_t tick_to_stop_on( 

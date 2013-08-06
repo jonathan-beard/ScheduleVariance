@@ -8,12 +8,12 @@ DARWIN =
 endif
 
 
-DEBUG = -g
+#DEBUG = -g
 CXXSTD = -std=c++11 $(DARWIN)
 CSTD = -std=c99
 
-CXXFLAGS = -Wall -O0 $(CXXSTD) $(DEBUG)
-CFLAGS = -Wall -O0 $(CSTD)  $(DEBUG)
+CXXFLAGS = -Wall -O2 $(CXXSTD) $(DEBUG)
+CFLAGS = -Wall -O2 $(CSTD)  $(DEBUG)
 
 EXE = svar
 
