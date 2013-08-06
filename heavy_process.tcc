@@ -237,10 +237,10 @@ virtual void Launch()
    SetReady();
    std::cerr << "Initialized 1: " << my_id << "\n";
    /* spin until everyone is ready */
-   while( ! EveryoneReady() )
+/*   while( ! EveryoneReady() )
    {
       continue;
-   }
+   }*/
    std::cerr << "Initialized 2: " << my_id << "\n";
    /* lets do something, the load will control the process */
    the_load.Run( *this );
@@ -449,7 +449,7 @@ private:
       {
          assert( input != nullptr );
          size_t index( CalcIndex( id, iteration ) );
-         assert( index < length );
+         assert( index < nitems );
          memcpy( &data[index] , 
                  input, 
                  sizeof( T ) );
@@ -459,7 +459,7 @@ private:
       {
          assert( data != nullptr );
          const size_t index( CalcIndex( id, iteration ) );
-         assert( index < length );
+         assert( index < nitems );
          return( &data[ index ] );
       }
 
@@ -481,8 +481,6 @@ private:
       
       /* All the data */
       T                *data;
-      /* overall length of the data */
-      size_t            length;
       size_t            nitems;
       char              *shm_key;
       int64_t           iterations;
