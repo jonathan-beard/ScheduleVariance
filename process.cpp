@@ -12,17 +12,12 @@ Process::~Process()
    /* nothing really to do here */
 }
 
-bool
-Process::Ready()
+void
+Process::SetReady()
 {
-   return( true );
+   /* do nothing */
 }
 
-bool
-Process::AllReady()
-{
-   return( true );
-}
 
 bool
 Process::Reset()
@@ -62,6 +57,12 @@ Process::EveryoneDone()
 
 bool
 Process::EveryoneWaiting()
+{
+   return( false );
+}
+
+bool
+Process::EveryoneReady()
 {
    return( false );
 }

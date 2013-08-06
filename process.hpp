@@ -25,14 +25,9 @@ public:
    virtual std::ostream& PrintData( std::ostream &stream ) = 0;
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
 
-   /**
-    * Ready - Called by various loads to wait for each process or thread
-    * running within the test till ready.  Exact implementation left up to the
-    * sub-class.  Default version here will always return true;
-    * @return  bool - threads are ready.
-    */
-   virtual bool Ready();
-   virtual bool AllReady();
+   virtual void SetReady();
+   virtual bool EveryoneReady();
+   
    /**
     * Reset - Called by various loads to resest the calling process or thread.
     * @param   bool - reset threads
@@ -47,7 +42,6 @@ public:
 
    virtual bool EveryoneDone();
    virtual bool EveryoneWaiting();
-
 protected:
    CmdArgs &cmd_args;
 };

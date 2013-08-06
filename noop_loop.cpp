@@ -73,6 +73,7 @@ NoOpLoop::Run( Process &p )
    {  
       p.SetRunning();
       /* initialize timers */
+      /* readTimeStampCounter will only work on x86 at the moment */
       const uint64_t tick_to_stop_on( 
             mean_ticks_to_spin + readTimeStampCounter() );
       /* TODO add variable distribution bit here, set outside of loop */
@@ -101,6 +102,12 @@ NoOpLoop::Run( Process &p )
       d.actual_stop_tick    = final_tick;
       p.SetData( (void*)&d,
                  it_index );
+      p.SetReady();
+      /* wait for store ops to complete */
+      while( ! p.EveryoneReady() )
+      {
+         continue;
+      }
    }
    p.SetDone();
 }

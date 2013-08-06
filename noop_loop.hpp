@@ -52,6 +52,7 @@ public:
       uint64_t mean_ticks_to_spin;
       uint64_t target_stop_tick;
       uint64_t actual_stop_tick;
+      char     pad[2];
    };
 
 private:

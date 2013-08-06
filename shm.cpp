@@ -124,6 +124,8 @@ void*
 SHM::Open( const char *key )
 {
    assert( key != nullptr );
+   /* accept no zero length keys */
+   assert( strlen( key ) > 0 );
    const int success( 0 );
    const int failure( -1 );
    int fd( failure );
@@ -137,7 +139,7 @@ SHM::Open( const char *key )
    fd = shm_open( key, 
                   flags, 
                   mode ); 
-   if( fd != success )
+   if( fd == failure )
    {
       perror( "Failed to open SHM, returning!!" );
       return( NULL );

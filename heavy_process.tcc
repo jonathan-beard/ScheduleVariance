@@ -118,12 +118,16 @@ virtual void Launch()
                                spawn );
    
    assert( process_status != nullptr );
-  
-
+   /* set everyone's status flag to NOTREADY */
+   for( int64_t index( 0 ); index < spawn; index++ )
+   {
+      process_status[index] = NOTREADY;
+   }
    /* set the parent's store object */
    assert( store == nullptr );
    store = new Store<D>( the_load.GetNumIterations(),
                          my_id /* should be parent in this case */,
+                         spawn,
                          shm_key_data );
    assert( store != nullptr );                         
 
@@ -146,14 +150,16 @@ virtual void Launch()
    /* pin processor */
    /* the cpuset should be inherited by forked processes */
    cpu_set_t   *cpuset( nullptr );
-   const int8_t processes_to_allocate( 1 );
+   const int8_t processors_to_allocate( 1 );
+   size_t cpu_allocate_size( -1 );
 #if   (__GLIBC_MINOR__ > 9 ) && (__GLIBC__ == 2 )
-   cpuset = CPU_ALLOC( processes_to_allocate );
+   cpuset = CPU_ALLOC( processors_to_allocate );
    assert( cpuset != nullptr );
-   const size_t cpu_allocate_size( CPU_ALLOC_SIZE( processes_to_allocate ) );
+   cpu_allocate_size =  CPU_ALLOC_SIZE( processors_to_allocate );
    CPU_ZERO_S( cpu_allocate_size, cpuset );
 #else
-   cpuset = (cpu_set_t*) malloc( sizeof( cpu_set_t ) );
+   cpu_allocate_size = sizeof( cpu_set_t );
+   cpuset = (cpu_set_t*) malloc( cpu_allocate_size );
    assert( cpuset != nullptr );
    CPU_ZERO( cpuset );
 #endif
@@ -162,7 +168,7 @@ virtual void Launch()
    auto setaffinity_ret_val( success );
    errno = success;
    setaffinity_ret_val = sched_setaffinity( 0 /* self */,
-                                            sizeof( cpu_set_t ),
+                                            cpu_allocate_size,
                                             cpuset );
    if( setaffinity_ret_val != success )
    {
@@ -187,10 +193,12 @@ virtual void Launch()
             
             my_id = j;
             /* open store */
-            assert( store == NULL );
+            store = nullptr;
             store = new Store<D>( the_load.GetNumIterations() , 
                                   my_id,
+                                  spawn,
                                   shm_key_data );
+            assert( store != nullptr );                                  
             goto END;
          }
          break;
@@ -228,7 +236,8 @@ virtual void Launch()
    END:;
    /* all processes will set their reset mark to zero, eventually */
    assert( Reset() == true );
-   while( ! AllReady() )
+   /* spin until everyone is ready */
+   while( ! EveryoneReady() )
    {
       continue;
    }
@@ -256,7 +265,7 @@ virtual std::ostream& PrintData( std::ostream &stream )
    const int64_t length( spawn * the_load.GetNumIterations() );
    for( int64_t index( 0 ); index < length; index++ )
    {
-      stream << the_load.PrintData( stream, (void*) (&(store->data)[index] )) << "\n";
+      the_load.PrintData( stream, (void*) (&(store->data)[index] )) << "\n";
    }
    return( stream );
 }
@@ -276,16 +285,13 @@ virtual void SetData( void *ptr, int64_t iteration )
                iteration );
 }
 
-virtual bool Ready()
+virtual void SetReady()
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
-   return( process_status[ my_id ] == READY );
+   assert( process_status != nullptr );
+   process_status[ my_id ] = READY;
 }
 
-virtual bool AllReady()
+virtual bool EveryoneReady()
 {
    if( process_status == nullptr )
    {
@@ -299,6 +305,7 @@ virtual bool AllReady()
    }
    return( true );
 }
+
 
 virtual bool Reset()
 {
@@ -398,13 +405,15 @@ private:
    template <class T> struct Store{
       Store(int64_t iterations, 
             int64_t id,
+            int64_t n_spawn,
             const char *key) : data( nullptr ),
                                nitems( 0 ),
                                shm_key( nullptr )
       {  
          assert( key != nullptr );
-         nitems = iterations * id;
+         nitems = iterations * n_spawn;
          const int64_t parent( 0 );
+         this->iterations = iterations;
          shm_key = strdup( key );
          assert( shm_key != nullptr );
          switch( id ){
@@ -467,7 +476,7 @@ private:
          }
          else
          {
-            index = (id * iteration);
+            index = (id * iterations) + iteration;
          }
          return( index ); 
       }
@@ -478,6 +487,7 @@ private:
       size_t            length;
       size_t            nitems;
       char              *shm_key;
+      int64_t           iterations;
    }; /* end struct def */
 
    Store<D>             *store;
