@@ -10,13 +10,54 @@
 
 class SHM{
 public:
+   /**
+    * GenKey - generate a shared key at the memory 
+    * address pointed to by ptr *key with length 
+    * length.
+    * @param   ptr - char *
+    * @param   length - size_t
+    */
+   static char*    GenKey();
+
+   /**
+    * Init - initialize SHM segment with file descriptor
+    * key, with the number of items (nitems) and number
+    * of bytes each (nbytes).  Returns NULL if error, and
+    * prints the error code to std::cerr 
+    * @param   key - const char *
+    * @param   nbytes - size_t
+    * @param   items - size_t
+    * @param   zero  - zero before returning memory, default: true
+    * @return  void* - ptr to beginning of memory allocated
+    */
    static void*   Init( const char *key, 
                         size_t nbytes,
-                        size_t nitems );
+                        size_t nitems,
+                        bool   zero = true );
 
+   /** 
+    * Open - opens the shared memory segment with the file
+    * descriptor stored at key.
+    * @param   key - const char *
+    * @return  void* - start of allocated memory, or NULL if
+    *                  error
+    */
    static void*   Open( const char *key );
 
-   static bool    Close( const char *key );
+   /**
+    * Close - returns true if successful, false otherwise.
+    * @param   key - const char*
+    * @param   ptr - start ptr to mapped region
+    * @param   nbytes - number of bytes for each element in mapped region
+    * @param   nitems - total number of items with size nbytes
+    * @param   zero  - zero mapped region before closing, default: false
+    * @return  bool - true if successful.
+    */
+   static bool    Close( const char *key, 
+                         void *ptr,
+                         size_t nbytes,
+                         size_t nitems,
+                         bool   zero = false );
 
 private:
    SHM();

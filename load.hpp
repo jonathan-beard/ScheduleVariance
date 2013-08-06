@@ -15,16 +15,23 @@
 
 class Process;
 
+
 class Load {
 public:
+   
+   struct Data{
+      /* empty struct */
+   }; 
+   
    Load( CmdArgs &args );
    virtual ~Load();
    virtual void Run( Process &p ) = 0;
 
-   virtual size_t GetDataStructSize() = 0;
    virtual size_t GetNumIterations() = 0;
 
-   virtual std::ostream& ReadData( std::ostream &stream, char *ptr ) = 0;
+   virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
+   virtual std::ostream& PrintData( std::ostream &stream, void *d ) = 0;
+   
 protected:
    CmdArgs &cmd_args;
 };

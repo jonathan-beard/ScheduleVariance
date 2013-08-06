@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <vector>
 #include <cassert>
-
+#include <array>
 #include <sys/types.h>
 #include <sched.h>
 #include <signal.h>
@@ -25,7 +25,7 @@
 
 class CmdArgs;
 
-template <class LoadType> class HeavyProcess : public Process {
+template <class LoadType, class D > class HeavyProcess : public Process {
 public:
 HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                spawn( 1 ),
@@ -35,9 +35,8 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                list( nullptr ),
                                the_load( cmd ),
                                process_status( nullptr ),
-                               data( nullptr ),
-                               my_id( 0 ),
-                               data_size( 0 )
+                               store( nullptr ),
+                               my_id( 0 )
 {
    /* register cmd arguments */
    cmd_args.addOption( 
@@ -77,9 +76,6 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
 
    /* this will be for the parent process only */                                
    list = new std::vector< pid_t >();
-   InitSyncSHM();
-   data_size = the_load.GetDataStructSize();
-   InitDataSHM();
 }
 
 virtual ~HeavyProcess()
@@ -88,24 +84,60 @@ virtual ~HeavyProcess()
    list = nullptr;
    if( process_status != nullptr )
    {
-      SHM::Close( shm_key );
+      SHM::Close( shm_key_sync,
+                  process_status,
+                  sizeof( ProcessStatus ),
+                  spawn /* #items */,
+                  false /* no zero */
+                );
    }
    process_status = nullptr;
+   if( store != nullptr )
+   {
+      delete( store );
+   }
+   store = nullptr;
 }
 
 
 virtual void Launch()
 {
+   /* generate our shared SHM keys */
+   char *temp_data( SHM::GenKey() );
+   char *temp_sync( SHM::GenKey() );
+   strncpy( shm_key_data, temp_data, SHM_KEY_LENGTH );
+   strncpy( shm_key_sync,  temp_sync, SHM_KEY_LENGTH );
+ 
+   free( temp_data );
+   free( temp_sync );
+  
+   /* open the process_status shm */
+   process_status = (HeavyProcess<LoadType, D>::ProcessStatus*)
+                    SHM::Init( shm_key_sync,
+                               sizeof( ProcessStatus ),
+                               spawn );
+   
+   assert( process_status != nullptr );
+  
+
+   /* set the parent's store object */
+   assert( store == nullptr );
+   store = new Store<D>( the_load.GetNumIterations(),
+                         my_id /* should be parent in this case */,
+                         shm_key_data );
+   assert( store != nullptr );                         
+
+   const int success( 0 );
    /* schedule can be inherited so lets do it here for all */
-   errno = EXIT_SUCCESS;
+   errno = success;
    const auto priority( sched_get_priority_max( schedule ) );
-   assert( errno == EXIT_SUCCESS );
-   errno = EXIT_SUCCESS;
+   assert( errno == success );
+   errno = success;
    const struct sched_param sp = { .sched_priority = priority };
    auto sch_ret_val( sched_setscheduler(0x0 /* this */,
                                         schedule,
                                         &sp ) );
-   if( sch_ret_val == EXIT_FAILURE )
+   if( sch_ret_val != success )
    {
       perror( "Failed to set scheduler" );
       exit( EXIT_FAILURE );
@@ -127,12 +159,12 @@ virtual void Launch()
 #endif
    CPU_SET( assigned_processor,
             cpuset );
-   auto setaffinity_ret_val( EXIT_SUCCESS );
-   errno = EXIT_SUCCESS;
+   auto setaffinity_ret_val( success );
+   errno = success;
    setaffinity_ret_val = sched_setaffinity( 0 /* self */,
                                             sizeof( cpu_set_t ),
                                             cpuset );
-   if( setaffinity_ret_val == EXIT_FAILURE )
+   if( setaffinity_ret_val != success )
    {
       perror( "Failed to set processor affinity" );
       exit( EXIT_FAILURE );
@@ -149,14 +181,16 @@ virtual void Launch()
             child = true;
             /* open SHM */
             process_status = nullptr;
-            process_status = (HeavyProcess<LoadType>::ProcessStatus*) 
+            process_status = (HeavyProcess<LoadType, D>::ProcessStatus*) 
                               SHM::Open( shm_key_sync );
             assert( process_status != nullptr );
-
-            data = NULL;
-            data = SHM::Open( shm_key_data );
-            assert( data != NULL );
+            
             my_id = j;
+            /* open store */
+            assert( store == NULL );
+            store = new Store<D>( the_load.GetNumIterations() , 
+                                  my_id,
+                                  shm_key_data );
             goto END;
          }
          break;
@@ -166,7 +200,7 @@ virtual void Launch()
             /* need to keep a list of all child processes and kill them */
             for( pid_t id : *list )
             {
-               if( kill( id, SIGQUIT ) != EXIT_SUCCESS )
+               if( kill( id, SIGQUIT ) != success )
                {
                   err << "Failed to kill pid ( " << id << " )\n";
                }
@@ -201,34 +235,45 @@ virtual void Launch()
    /* lets do something, the load will control the process */
    the_load.Run( *this );
    /* control is now back to here, shutdown shm */
-   SHM::Close( shm_key );
-   if( child ) exit( EXIT_SUCCESS );
+   if( child ){
+      /* takes care of unlinking & closing SHM */
+      delete( store );
+      SHM::Close( shm_key_sync,
+                  (void*) process_status,
+                  sizeof( ProcessStatus ),
+                  spawn /* nitems */,
+                  false /* don't zero */
+                );
+      exit( EXIT_SUCCESS );
+   }
+   /* else 
+      if( ! child ) main will call delete 
+    */
 }
 
-virtual std::ostream& Print( std::ostream &stream )
+virtual std::ostream& PrintData( std::ostream &stream )
 {
-   stream << "Not implemented\n"; 
+   const int64_t length( spawn * the_load.GetNumIterations() );
+   for( int64_t index( 0 ); index < length; index++ )
+   {
+      stream << the_load.PrintData( stream, (void*) (&(store->data)[index] )) << "\n";
+   }
    return( stream );
 }
 
 virtual std::ostream& PrintHeader( std::ostream &stream )
 {
-   stream << "Not implemented\n"; 
+   stream << the_load.PrintHeader( stream ) << "\n";
    return( stream );
 }
 
-virtual void SetData( void *ptr, size_t nbytes, int64_t iteration )
+virtual void SetData( void *ptr, int64_t iteration )
 {
-   size_t index( 0 );
-   if( my_id == 0 )
-   {
-      index = iteration;
-   }
-   else
-   {
-      index = ( my_id * iteration ) + 1;
-   }
-   memcpy( &(data[index]), ptr, nbytes );
+   assert( store != nullptr );
+   D *d_ptr( reinterpret_cast< D* >( ptr ) );
+   store->Set( d_ptr,
+               my_id,
+               iteration );
 }
 
 virtual bool Ready()
@@ -336,35 +381,6 @@ protected:
    bool    child;
 
 private:
-void InitSyncSHM()
-{
-   /* set SHM key for all sub-processes of this process to open */
-   memset( &shm_key_sync, '\0', SHM_KEY_LENGTH );
-   srand( time( nullptr ) );
-   int key( rand() );
-   /* print the key to shm_key */
-   snprintf( shm_key_sync, SHM_KEY_LENGTH, "%d", key );
-   process_status = (HeavyProcess<LoadType>::ProcessStatus*)
-                    SHM::Init( shm_key_sync,
-                               sizeof( ProcessStatus ),
-                               spawn );
-   assert( process_status != nullptr );
-}
-
-void InitDataSHM()
-{
-   /* set SHM key for all sub-processes of this process to open */
-   memset( &shm_key_data, '\0', SHM_KEY_LENGTH );
-   srand( time( nullptr ) );
-   int key( rand() );
-   /* print the key to shm_key */
-   snprintf( shm_key_data, SHM_KEY_LENGTH, "%d", key );
-   size_t iterations = the_load.GetNumIterations();
-   data = (char*) SHM::Init( shm_key_data,
-                             data_size,
-                             iterations * spawn );
-   assert( data != nullptr );
-}
 
    /* just remember ptrs are not carried accross fork */
    std::vector< pid_t > *list; 
@@ -378,9 +394,94 @@ void InitDataSHM()
                                  DONE };
    /* array for each process to keep their status */
    ProcessStatus        *process_status;
-   char                 *data;
+
+   template <class T> struct Store{
+      Store(int64_t iterations, 
+            int64_t id,
+            const char *key) : data( nullptr ),
+                               nitems( 0 ),
+                               shm_key( nullptr )
+      {  
+         assert( key != nullptr );
+         nitems = iterations * id;
+         const int64_t parent( 0 );
+         shm_key = strdup( key );
+         assert( shm_key != nullptr );
+         switch( id ){
+            case( parent ):
+            {
+               /* create shm */
+               data = (T*) SHM::Init( shm_key,
+                                      sizeof( T ),
+                                      nitems );
+               assert( data != nullptr );
+            }
+            break;
+            default:
+            {
+               /* open shm */
+               data = (T*) SHM::Open( shm_key );
+               assert( data != nullptr );
+            }
+         }
+      }
+
+      ~Store()
+      {
+         SHM::Close( shm_key,
+                     data,
+                     sizeof( T ),
+                     nitems,
+                     false );
+         free( shm_key );
+      }
+
+      void              Set( T       *input,
+                             int64_t id, 
+                             int64_t iteration )
+      {
+         assert( input != nullptr );
+         size_t index( CalcIndex( id, iteration ) );
+         assert( index < length );
+         memcpy( &data[index] , 
+                 input, 
+                 sizeof( T ) );
+      }
+
+      T*   Get( int64_t id, int64_t iteration )
+      {
+         assert( data != nullptr );
+         const size_t index( CalcIndex( id, iteration ) );
+         assert( index < length );
+         return( &data[ index ] );
+      }
+
+      size_t   CalcIndex( int64_t id, int64_t iteration )
+      {
+         assert( id >= 0 );
+         assert( iteration >= 0 );
+         size_t index( 0 );
+         if( id == 0 )
+         {
+            index = iteration;
+         }
+         else
+         {
+            index = (id * iteration);
+         }
+         return( index ); 
+      }
+      
+      /* All the data */
+      T                *data;
+      /* overall length of the data */
+      size_t            length;
+      size_t            nitems;
+      char              *shm_key;
+   }; /* end struct def */
+
+   Store<D>             *store;
    int64_t              my_id;
-   size_t               data_size;
 };
 
 #endif /* END _HEAVY_PROCESS_HPP_ */

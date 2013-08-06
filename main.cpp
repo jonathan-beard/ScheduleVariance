@@ -40,7 +40,7 @@ main( int argc, char **argv )
    /* initialize processes & tests */
    Process *process( nullptr );
 
-   process = new HeavyProcess<NoOpLoop>( cmd );
+   process = new HeavyProcess<NoOpLoop, NoOpLoop::Data >( cmd );
 
    assert( process != nullptr );
 
@@ -51,6 +51,13 @@ main( int argc, char **argv )
    if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
 
    process->Launch();
+
+   /* everybody else should be done at this point, get data */
+   std::stringstream ss;
+   process->PrintHeader( ss );
+   process->PrintData( ss );
+   std::cout << "TestData:\n";
+   std::cout << ss.str() << "\n";
 
    if( process != nullptr )
    {

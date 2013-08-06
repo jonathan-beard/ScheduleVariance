@@ -20,9 +20,10 @@ public:
    virtual ~Process();
    virtual void Launch() = 0;
 
-   virtual void SetData( void *ptr, size_t nbytes, int64_t iteration ) = 0;
+   virtual void SetData( void *ptr, int64_t iteration ) = 0;
 
-   virtual std::ostream& Print( std::ostream &stream ) = 0;
+   virtual std::ostream& PrintData( std::ostream &stream ) = 0;
+   virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
 
    /**
     * Ready - Called by various loads to wait for each process or thread

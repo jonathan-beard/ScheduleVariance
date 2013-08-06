@@ -22,7 +22,7 @@ LIBS = -lrt
 CPPOBJ = main command_arguments command_option_base process \
 			load noop_loop shm
 
-COBJ	= system_query			
+COBJ	= system_query getrandom
 
 FILES = $(addsuffix .cpp, $(CPPOBJ)) $(addsuffix .c, $(COBJ) )
 OBJS  = $(addsuffix .o, $(CPPOBJ)) $(addsuffix .o, $(COBJ) )

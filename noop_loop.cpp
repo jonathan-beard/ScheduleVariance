@@ -46,6 +46,26 @@ NoOpLoop::~NoOpLoop()
    /* nothing to do */
 }
 
+std::ostream&
+NoOpLoop::PrintHeader( std::ostream &stream )
+{
+   stream << "Load" << "," << "Distribution" << "," << "ServiceTime";
+   stream << "," << "Frequency" << "," << "TicksToSpin" << ",";
+   stream << "TargetStopTick" << "," << "ActualStopTick";
+   return( stream );
+}
+
+std::ostream&
+NoOpLoop::PrintData( std::ostream &stream, void *d )
+{
+   NoOpLoop::Data *d_ptr( reinterpret_cast< NoOpLoop::Data* >( d ) );
+   stream << d_ptr->load_name << "," << d_ptr->distribution << ",";
+   stream << d_ptr->service_time << "," << d_ptr->frequency << ",";
+   stream << d_ptr->mean_ticks_to_spin << "," << d_ptr->target_stop_tick << ",";
+   stream << d_ptr->actual_stop_tick;
+   return( stream );
+}
+
 void
 NoOpLoop::Run( Process &p )
 {  
@@ -56,8 +76,8 @@ NoOpLoop::Run( Process &p )
       const uint64_t tick_to_stop_on( 
             mean_ticks_to_spin + readTimeStampCounter() );
       /* TODO add variable distribution bit here, set outside of loop */
-      volatile uint64_t final_ticks( 0 );
-      while( tick_to_stop_on >= (final_ticks = readTimeStampCounter() ) )
+      volatile uint64_t final_tick( 0 );
+      while( tick_to_stop_on >= (final_tick = readTimeStampCounter() ) )
       {
          __asm__ volatile("\
                               nop"
@@ -71,26 +91,22 @@ NoOpLoop::Run( Process &p )
       {
          continue;
       }
+      /* now that everyone is done, store the data */
+      NoOpLoop::Data d;
+      d.distribution = distribution;
+      d.service_time = service_time;
+      d.frequency    = frequency;
+      d.mean_ticks_to_spin = mean_ticks_to_spin;
+      d.target_stop_tick    = tick_to_stop_on;
+      d.actual_stop_tick    = final_tick;
+      p.SetData( (void*)&d,
+                 it_index );
    }
    p.SetDone();
-}
-size_t 
-NoOpLoop::GetDataStructSize()
-{
-   /* gotta know in advance what your output will be */
-   return( sizeof( double ) + sizeof( uint64_t ) + sizeof( uint64_t ) );
 }
 
 size_t 
 NoOpLoop::GetNumIterations()
 {
    return( (size_t) iterations );
-}
-
-std::ostream& 
-NoOpLoop::ReadData( std::ostream &stream,
-                    char *ptr )
-{                  
-   size_t size( GetDataStructSize() );
-   
 }
