@@ -243,6 +243,7 @@ virtual void Launch()
    the_load.Run( *this );
    /* control is now back to here, shutdown shm */
    if( child ){
+      std::cerr << "Dead: " << my_id << "\n";
       /* takes care of unlinking & closing SHM */
       delete( store );
       /* close unmaps memory too */
