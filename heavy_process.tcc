@@ -397,6 +397,7 @@ private:
                                  RUNNING, 
                                  WAITING,
                                  DONE };
+   
    /* array for each process to keep their status */
    ProcessStatus        *process_status;
 
