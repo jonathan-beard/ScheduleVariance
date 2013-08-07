@@ -31,7 +31,7 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                spawn( 1 ),
                                assigned_processor( 1 ),
                                schedule( SCHED_OTHER ),
-                               child( false ),
+                               is_offspring( false ),
                                list( nullptr ),
                                the_load( cmd ),
                                process_status( nullptr ),
@@ -184,7 +184,7 @@ virtual void Launch()
          case( 0 /* CHILD */ ):
          {  
             /* tell yourself you're a child */
-            child = true;
+            is_offspring = true;
             /* open SHM */
             process_status = nullptr;
             process_status = (HeavyProcess<LoadType, D>::ProcessStatus*) 
@@ -242,7 +242,7 @@ virtual void Launch()
    /* lets do something, the load will control the process */
    the_load.Run( *this );
    /* control is now back to here, shutdown shm */
-   if( child ){
+   if( is_offspring ){
       std::cerr << "Dead: " << my_id << "\n";
       /* takes care of unlinking & closing SHM */
       delete( store );
@@ -256,7 +256,7 @@ virtual void Launch()
       exit( EXIT_SUCCESS );
    }
    /* else 
-      if( ! child ) main will call delete 
+      if( ! is_offspring ) main will call delete 
     */
 }
 
@@ -400,7 +400,7 @@ protected:
    int64_t spawn;
    int64_t assigned_processor;
    int64_t schedule;
-   bool    child;
+   bool    is_offspring;
 
 private:
 
