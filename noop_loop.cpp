@@ -106,14 +106,19 @@ NoOpLoop::Run( Process &p )
       d.actual_stop_tick    = final_tick;
       p.SetData( (void*)&d,
                  it_index );
-      p.SetDone();
+      p.SetContinuing();
       /* wait for store ops to complete */
-      while( ! p.EveryoneDone() )
+      while( ! p.EveryoneContinuing() )
       {
          continue;
       }
    }
    p.SetDone();
+   while( ! p.EveryoneDone() )
+   {
+      continue;
+   }
+   /* wait for everyone else to finish then exit */
 }
 
 size_t 

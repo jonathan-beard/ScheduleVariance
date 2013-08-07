@@ -235,13 +235,10 @@ virtual void Launch()
    }
    END:;
    SetReady();
-   std::cerr << "Initialized 1: " << my_id << "\n";
-   /* spin until everyone is ready */
    while( ! EveryoneReady() )
    {
       continue;
    }
-   std::cerr << "Initialized 2: " << my_id << "\n";
    /* lets do something, the load will control the process */
    the_load.Run( *this );
    /* control is now back to here, shutdown shm */
