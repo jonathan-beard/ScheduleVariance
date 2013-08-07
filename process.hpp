@@ -42,6 +42,10 @@ public:
 
    virtual bool EveryoneDone();
    virtual bool EveryoneWaiting();
+
+   virtual void SetContinuing();
+   virtual bool EveryoneContinuing();
+
 protected:
    CmdArgs &cmd_args;
 };

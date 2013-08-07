@@ -237,10 +237,10 @@ virtual void Launch()
    SetReady();
    std::cerr << "Initialized 1: " << my_id << "\n";
    /* spin until everyone is ready */
-/*   while( ! EveryoneReady() )
+   while( ! EveryoneReady() )
    {
       continue;
-   }*/
+   }
    std::cerr << "Initialized 2: " << my_id << "\n";
    /* lets do something, the load will control the process */
    the_load.Run( *this );
@@ -248,6 +248,7 @@ virtual void Launch()
    if( child ){
       /* takes care of unlinking & closing SHM */
       delete( store );
+      /* close unmaps memory too */
       SHM::Close( shm_key_sync,
                   (void*) process_status,
                   sizeof( ProcessStatus ),
@@ -298,7 +299,7 @@ virtual bool EveryoneReady()
    /* we have to wait till everyone is ready */
    for( int64_t index( 0 ); index < spawn; index++ )
    {
-      if( process_status[ index ] != READY ) return( false );
+      if( process_status[ index ] < READY ) return( false );
    }
    std::cerr << "True : " << my_id << "\n";
    return( true );
@@ -361,7 +362,26 @@ virtual bool EveryoneDone()
    }
    for( int64_t index( 0 ); index < spawn; index++ )
    {
-      if( process_status[ index ] != DONE ) return( false );
+      if( process_status[ index ] < DONE ) return( false );
+   }
+   return( true );
+}
+
+virtual void SetContinuing()
+{
+   assert( process_status != nullptr );
+   process_status[ my_id ] = CONTINUING;
+}
+
+virtual bool EveryoneContinuing()
+{
+   if( process_status == nullptr )
+   {
+      return( false );
+   }
+   for( int64_t index( 0 ); index < span; index++ )
+   {
+      if( process_status[ index ] < CONTINUING ) return( false );
    }
    return( true );
 }
@@ -374,7 +394,7 @@ virtual bool EveryoneWaiting()
    }
    for( int64_t index( 0 ); index < spawn; index++ )
    {
-      if( process_status[ index ] != WAITING ) return( false );
+      if( process_status[ index ] < WAITING ) return( false );
    }
    return( true );
 }
@@ -392,10 +412,13 @@ private:
    LoadType              the_load;
    char                  shm_key_sync[ SHM_KEY_LENGTH ];
    char                  shm_key_data[ SHM_KEY_LENGTH ];
+
+   /* TODO: this isn't ideal, but it'll work for this instance */
    enum ProcessStatus : int8_t { NOTREADY = 0, 
                                  READY, 
                                  RUNNING, 
                                  WAITING,
+                                 CONTINUING,
                                  DONE };
    
    /* array for each process to keep their status */

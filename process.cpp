@@ -66,3 +66,16 @@ Process::EveryoneReady()
 {
    return( false );
 }
+
+
+void 
+Process::SetContinuing()
+{
+   /* do nothing */
+}
+
+bool 
+Process::EveryoneContinuing()
+{
+   return( false );
+}

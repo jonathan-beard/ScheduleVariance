@@ -74,12 +74,14 @@ NoOpLoop::Run( Process &p )
 
    for( int64_t it_index( 0 ); it_index < iterations; it_index++ )
    {  
+      
       /* initialize timers */
       /* readTimeStampCounter will only work on x86 at the moment */
       const uint64_t tick_to_stop_on( 
             mean_ticks_to_spin + readTimeStampCounter() );
       /* TODO add variable distribution bit here, set outside of loop */
       volatile uint64_t final_tick( 0 );
+      p.SetRunning();
       while( tick_to_stop_on >= (final_tick = readTimeStampCounter() ) )
       {
          __asm__ volatile("\
@@ -104,9 +106,9 @@ NoOpLoop::Run( Process &p )
       d.actual_stop_tick    = final_tick;
       p.SetData( (void*)&d,
                  it_index );
-      p.SetReady();
+      p.SetDone();
       /* wait for store ops to complete */
-      while( ! p.EveryoneReady() )
+      while( ! p.EveryoneDone() )
       {
          continue;
       }
