@@ -27,7 +27,16 @@ public:
    enum Distribution { Deterministic = 0, 
                        Uniform, 
                        Exponential, 
-                       HyperExponential };
+                       HyperExponential,
+                       N };
+   
+   const char *DistributionString[N] =
+      {
+         [Deterministic] = "Deterministic",
+         [Uniform]       = "Uniform",
+         [Exponential]   = "Exponential",
+         [HyperExponential] = "HyperExponential"
+      };
 
    /* these will be allocated by the calling test harness */
 #define LOAD_LENGTH 40

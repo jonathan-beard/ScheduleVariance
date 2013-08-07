@@ -58,7 +58,8 @@ std::ostream&
 NoOpLoop::PrintData( std::ostream &stream, void *d )
 {
    NoOpLoop::Data *d_ptr( reinterpret_cast< NoOpLoop::Data* >( d ) );
-   stream << d_ptr->load_name << "," << d_ptr->distribution << ",";
+   stream << d_ptr->load_name << "," << 
+      DistributionString[ d_ptr->distribution ] << ",";
    stream << d_ptr->service_time << "," << d_ptr->frequency << ",";
    stream << d_ptr->mean_ticks_to_spin << "," << d_ptr->target_stop_tick << ",";
    stream << d_ptr->actual_stop_tick << ",";

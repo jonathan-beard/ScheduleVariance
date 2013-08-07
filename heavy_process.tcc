@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/types.h>
+#include "procstat.h"
 #include "shm.hpp"
 
 
@@ -32,17 +33,22 @@ public:
 struct Data : public D {
    Data( int64_t iteration, 
          int64_t id,
-         D       data) : it( iteration ),
-                         p_id( id ),
-                         d( data ) /* assume D has a copy constructor */
+         D            &data,
+         ProcStatusData &d) : it( iteration ),
+                              p_id( id ),
+                              d( data ) /* assume D has a copy constructor */
    {
-      /* nothing to do */
+      proc_stat_data.voluntary_context_swaps = 
+         d.voluntary_context_swaps;
+      proc_stat_data.non_voluntary_context_swaps = 
+         d.non_voluntary_context_swaps;
    }
 
    
    int64_t  it;
    int64_t  p_id;
    D        d;
+   ProcStatusData proc_stat_data;
 };
 
 HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
@@ -54,7 +60,8 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                the_load( cmd ),
                                process_status( nullptr ),
                                store( nullptr ),
-                               my_id( 0 )
+                               my_id( 0 ),
+                               p_stat_data( nullptr )
 {
    /* register cmd arguments */
    cmd_args.addOption( 
@@ -252,6 +259,8 @@ virtual void Launch()
       }
    }
    END:;
+   delete( p_stat_data );
+   p_stat_data = get_context_swaps_for_process( NULL );
    SetReady();
    while( ! EveryoneReady() )
    {
@@ -285,6 +294,8 @@ virtual std::ostream& PrintData( std::ostream &stream )
       /* a little hacky I admit, but it works */
       stream << store->data[index].it << "," << 
       store->data[index].p_id << ",";
+      stream << store->data[index].proc_stat_data.voluntary_context_swaps << ",";
+      stream << store->data[index].proc_stat_data.non_voluntary_context_swaps << ",";
       the_load.PrintData( stream, (void*) (&(store->data)[index].d) ) << "\n";
    }
    return( stream );
@@ -292,7 +303,8 @@ virtual std::ostream& PrintData( std::ostream &stream )
 
 virtual std::ostream& PrintHeader( std::ostream &stream )
 {
-   stream << "Iteration" << "," << "ProcessID" << ",";
+   stream << "Iteration" << "," << "ProcessID" << "," << "VoluntaryContextSwaps";
+   stream << "," << "Non-VoluntaryContextswaps" << ",";
    the_load.PrintHeader( stream ) << "\n";
    return( stream );
 }
@@ -302,8 +314,18 @@ virtual void SetData( void *ptr, int64_t iteration )
    assert( store != nullptr );
    assert( iteration >= 0 );
    D *d_ptr( reinterpret_cast< D* >( ptr ) );
+   ProcStatusData *temp( nullptr );
+   temp = get_context_swaps_for_process( NULL );
+   assert( temp != nullptr );
+   ProcStatusData diff;
+   diff.voluntary_context_swaps = 
+      temp->voluntary_context_swaps - p_stat_data->voluntary_context_swaps;
+   diff.non_voluntary_context_swaps = 
+      temp->non_voluntary_context_swaps - p_stat_data->non_voluntary_context_swaps;
    /* yes there is a whole lot of copying going on */
-   Data process_data( iteration, my_id, *d_ptr );
+   Data process_data( iteration, my_id, *d_ptr, diff);
+   delete( p_stat_data );
+   p_stat_data = temp;
    store->Set( &process_data ,
                my_id,
                iteration );
@@ -534,6 +556,7 @@ private:
 
    Store<Data>          *store;
    int64_t              my_id;
+   ProcStatusData         *p_stat_data;
 };
 
 #endif /* END _HEAVY_PROCESS_HPP_ */
