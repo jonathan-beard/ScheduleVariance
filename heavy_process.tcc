@@ -379,7 +379,7 @@ virtual bool EveryoneContinuing()
    {
       return( false );
    }
-   for( int64_t index( 0 ); index < span; index++ )
+   for( int64_t index( 0 ); index < spawn; index++ )
    {
       if( process_status[ index ] < CONTINUING ) return( false );
    }
