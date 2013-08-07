@@ -37,6 +37,12 @@ main( int argc, char **argv )
                              },
                              true ) );
   
+   static bool print_header( false );
+   cmd.addOption( 
+         new Option< bool >( print_header,
+                             "-print_header",
+                             "Print a header before data" ) );
+
    /* initialize processes & tests */
    Process *process( nullptr );
 
@@ -54,7 +60,8 @@ main( int argc, char **argv )
    /* child prcesses will have exited */
    /* everybody else should be done at this point, get data */
    std::stringstream ss;
-   process->PrintHeader( ss );
+   if( print_header ) 
+      process->PrintHeader( ss );
    process->PrintData( ss );
    std::cout << "TestData:\n";
    std::cout << ss.str() << "\n";
