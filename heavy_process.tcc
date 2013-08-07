@@ -27,6 +27,24 @@ class CmdArgs;
 
 template <class LoadType, class D > class HeavyProcess : public Process {
 public:
+
+/* tack this on to whatever struct we're passed in D */
+struct Data : public D {
+   Data( int64_t iteration, 
+         int64_t id,
+         D       data) : it( iteration ),
+                         p_id( id ),
+                         d( data ) /* assume D has a copy constructor */
+   {
+      /* nothing to do */
+   }
+
+   
+   int64_t  it;
+   int64_t  p_id;
+   D        d;
+};
+
 HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                spawn( 1 ),
                                assigned_processor( 1 ),
@@ -125,10 +143,10 @@ virtual void Launch()
    }
    /* set the parent's store object */
    assert( store == nullptr );
-   store = new Store<D>( the_load.GetNumIterations(),
-                         my_id /* should be parent in this case */,
-                         spawn,
-                         shm_key_data );
+   store = new Store<Data>( the_load.GetNumIterations(),
+                            my_id /* should be parent in this case */,
+                            spawn,
+                            shm_key_data );
    assert( store != nullptr );                         
 
    const int success( 0 );
@@ -194,10 +212,10 @@ virtual void Launch()
             my_id = j;
             /* open store */
             store = nullptr;
-            store = new Store<D>( the_load.GetNumIterations() , 
-                                  my_id,
-                                  spawn,
-                                  shm_key_data );
+            store = new Store<Data>( the_load.GetNumIterations() , 
+                                     my_id,
+                                     spawn,
+                                     shm_key_data );
             assert( store != nullptr );                                  
             goto END;
          }
@@ -264,13 +282,17 @@ virtual std::ostream& PrintData( std::ostream &stream )
    const int64_t length( spawn * the_load.GetNumIterations() );
    for( int64_t index( 0 ); index < length; index++ )
    {
-      the_load.PrintData( stream, (void*) (&(store->data)[index] ) ) << "\n";
+      /* a little hacky I admit, but it works */
+      stream << store->data[index].it << "," << 
+      store->data[index].p_id << ",";
+      the_load.PrintData( stream, (void*) (&(store->data)[index].d) ) << "\n";
    }
    return( stream );
 }
 
 virtual std::ostream& PrintHeader( std::ostream &stream )
 {
+   stream << "Iteration" << "," << "ProcessID" << ",";
    the_load.PrintHeader( stream ) << "\n";
    return( stream );
 }
@@ -278,8 +300,11 @@ virtual std::ostream& PrintHeader( std::ostream &stream )
 virtual void SetData( void *ptr, int64_t iteration )
 {
    assert( store != nullptr );
+   assert( iteration >= 0 );
    D *d_ptr( reinterpret_cast< D* >( ptr ) );
-   store->Set( d_ptr,
+   /* yes there is a whole lot of copying going on */
+   Data process_data( my_id, iteration, *d_ptr );
+   store->Set( &process_data ,
                my_id,
                iteration );
 }
@@ -507,7 +532,7 @@ private:
    }; /* end struct def */
    
 
-   Store<D>             *store;
+   Store<Data>          *store;
    int64_t              my_id;
 };
 

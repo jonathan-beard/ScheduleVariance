@@ -20,7 +20,15 @@ class Load {
 public:
    
    struct Data{
-      /* empty struct */
+      Data()
+      {
+         /* nothing really to do */
+      }
+
+      Data( const Data &d )
+      {
+         /* nothing really to do */
+      }
    }; 
    
    Load( CmdArgs &args );

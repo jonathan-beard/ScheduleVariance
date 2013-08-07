@@ -8,16 +8,22 @@ DARWIN =
 endif
 
 
-#DEBUG = -g
+DEBUG = -g -O0
 CXXSTD = -std=c++11 $(DARWIN)
 CSTD = -std=c99
 
-CXXFLAGS = -Wall -O2 $(CXXSTD) $(DEBUG)
-CFLAGS = -Wall -O2 $(CSTD)  $(DEBUG)
+
+INC = -I./procstat
+
+CXXFLAGS = -Wall -O2 $(CXXSTD) $(DEBUG) $(INC)
+CFLAGS = -Wall -O2 $(CSTD)  $(DEBUG) $(INC)
+
 
 EXE = svar
 
-LIBS = -lrt
+
+LDFLAGS = -L./procstat -L.
+LIBS = -lrt -lprocstat
 
 CPPOBJ = main command_arguments command_option_base process \
 			load noop_loop shm
@@ -35,8 +41,10 @@ all:  $(EXE)
 
 $(EXE): $(FILES)
 	$(MAKE) $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(EXE) $(OBJS) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS)
+
+
 
 .PHONY: clean
-clean:
+clean: 
 	rm -rf $(CLEANLIST)

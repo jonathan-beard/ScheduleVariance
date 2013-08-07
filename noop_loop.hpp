@@ -30,8 +30,10 @@ public:
                        HyperExponential };
 
    /* these will be allocated by the calling test harness */
+#define LOAD_LENGTH 40
    struct Data : public Load::Data {
-      Data()  : distribution( Deterministic ),
+      Data()  : Load::Data(),
+                distribution( Deterministic ),
                 service_time( 0.0 ),
                 frequency( 0 ),
                 mean_ticks_to_spin( 0 ),
@@ -44,16 +46,31 @@ public:
          load_name[3] = 'p';
          load_name[4] = '\0';
       }
-     
-      char     load_name[40];
+    
+      Data( const Data &d )
+      {
+         /* not ideal, but it'll work for now */
+         for( int i = 0; i < LOAD_LENGTH; i++ )
+         {
+            load_name[i] = d.load_name[i];
+         }
+         distribution       = d.distribution;
+         service_time       = d.service_time;
+         frequency          = d.frequency;
+         mean_ticks_to_spin = d.mean_ticks_to_spin;
+         target_stop_tick   = d.target_stop_tick;
+         actual_stop_tick   = d.actual_stop_tick;
+      }
+
+      char     load_name[ LOAD_LENGTH ];
       int64_t  distribution;
       double   service_time;
       uint64_t frequency;
       uint64_t mean_ticks_to_spin;
       uint64_t target_stop_tick;
       uint64_t actual_stop_tick;
-      char     pad[2];
    };
+#undef LOAD_LENGTH
 
 private:
    int64_t        iterations;
