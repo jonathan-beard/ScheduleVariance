@@ -243,7 +243,6 @@ virtual void Launch()
    the_load.Run( *this );
    /* control is now back to here, shutdown shm */
    if( is_offspring ){
-      std::cerr << "Dead: " << my_id << "\n";
       /* takes care of unlinking & closing SHM */
       delete( store );
       /* close unmaps memory too */
@@ -506,6 +505,7 @@ private:
       char              *shm_key;
       int64_t           iterations;
    }; /* end struct def */
+   
 
    Store<D>             *store;
    int64_t              my_id;
