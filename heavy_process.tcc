@@ -303,7 +303,7 @@ virtual void SetData( void *ptr, int64_t iteration )
    assert( iteration >= 0 );
    D *d_ptr( reinterpret_cast< D* >( ptr ) );
    /* yes there is a whole lot of copying going on */
-   Data process_data( my_id, iteration, *d_ptr );
+   Data process_data( iteration, my_id, *d_ptr );
    store->Set( &process_data ,
                my_id,
                iteration );
