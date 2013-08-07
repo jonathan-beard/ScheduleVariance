@@ -298,7 +298,6 @@ virtual bool EveryoneReady()
    {
       if( process_status[ index ] < READY ) return( false );
    }
-   std::cerr << "True : " << my_id << "\n";
    return( true );
 }
 

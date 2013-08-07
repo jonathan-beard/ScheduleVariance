@@ -51,7 +51,7 @@ main( int argc, char **argv )
    if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
 
    process->Launch();
-
+   /* child prcesses will have exited */
    /* everybody else should be done at this point, get data */
    std::stringstream ss;
    process->PrintHeader( ss );

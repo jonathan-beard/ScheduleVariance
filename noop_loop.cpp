@@ -63,6 +63,7 @@ NoOpLoop::PrintData( std::ostream &stream, void *d )
    stream << d_ptr->mean_ticks_to_spin << "," << d_ptr->target_stop_tick << ",";
    stream << d_ptr->actual_stop_tick << ",";
    stream << ( d_ptr->actual_stop_tick - d_ptr->target_stop_tick );
+   std::cerr << "Printing Data!!\n";
    return( stream );
 }
 
