@@ -33,4 +33,6 @@ ehthumbs.db
 
 # Internal repos that we'll compile as libraries
 ################################################
-./ProcStat/*
+./procstat/*
+./procstat
+./procstat/
