@@ -18,6 +18,8 @@ class Process {
 public:
    Process( CmdArgs &cmd );
    virtual ~Process();
+   
+   
    virtual void Launch() = 0;
 
    virtual void SetData( void *ptr, int64_t iteration ) = 0;
@@ -25,24 +27,21 @@ public:
    virtual std::ostream& PrintData( std::ostream &stream ) = 0;
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
 
+   
+   virtual bool Reset();
+   virtual bool ResetAll();
+  
+   virtual void SetRunning();
+   
    virtual void SetReady();
    virtual bool EveryoneReady();
    
-   /**
-    * Reset - Called by various loads to resest the calling process or thread.
-    * @param   bool - reset threads
-    */
-   virtual bool Reset();
-
-   virtual bool ResetAll();
-
-   virtual void SetRunning();
    virtual void SetDone();
-   virtual void SetWaiting();
-
    virtual bool EveryoneDone();
+   
+   virtual void SetWaiting();
    virtual bool EveryoneWaiting();
-
+   
    virtual void SetContinuing();
    virtual bool EveryoneContinuing();
 

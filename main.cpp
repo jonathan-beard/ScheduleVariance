@@ -55,20 +55,17 @@ main( int argc, char **argv )
 
    /* check help */
    if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
-
-   process->Launch();
-   /* child prcesses will have exited */
-   /* everybody else should be done at this point, get data */
-   std::stringstream ss;
+   std::stringstream output_stream; 
    if( print_header ) 
-      process->PrintHeader( ss );
-   process->PrintData( ss );
-   std::cout << "TestData:\n";
-   std::cout << ss.str() << "\n";
-
-   if( process != nullptr )
+      process->PrintHeader( output_stream );
+   if( ! print_header )
    {
-      delete( process );
+      process->Launch();
+      /* child prcesses will have exited */
+      /* everybody else should be done at this point, get data */
+      process->PrintData( output_stream );
    }
+   std::cout << output_stream.str() << "\n";
+   delete( process );
    return( EXIT_SUCCESS );
 }
