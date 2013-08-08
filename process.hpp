@@ -28,22 +28,21 @@ public:
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
 
    
-   virtual bool Reset();
-   virtual bool ResetAll();
+   virtual void Reset( int64_t iteration ) = 0;
   
-   virtual void SetRunning();
+   virtual void SetRunning( int64_t iteration ) = 0;
    
-   virtual void SetReady();
-   virtual bool EveryoneReady();
+   virtual void SetReady( int64_t iteration ) = 0;
+   virtual bool EveryoneReady( int64_t iteration ) = 0;
    
-   virtual void SetDone();
-   virtual bool EveryoneDone();
+   virtual void SetDone( int64_t iteration ) = 0;
+   virtual bool EveryoneDone( int64_t iteration ) = 0;
    
-   virtual void SetWaiting();
-   virtual bool EveryoneWaiting();
+   virtual void SetWaiting( int64_t iteration ) = 0;
+   virtual bool EveryoneWaiting( int64_t iteration ) = 0;
    
-   virtual void SetContinuing();
-   virtual bool EveryoneContinuing();
+   virtual void SetContinuing( int64_t iteration ) = 0;
+   virtual bool EveryoneContinuing( int64_t iteration ) = 0;
 
 protected:
    CmdArgs &cmd_args;

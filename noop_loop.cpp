@@ -6,6 +6,9 @@
 #include "noop_loop.hpp"
 #include "process.hpp"
 
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "system_query.h"
 
 NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
@@ -73,16 +76,16 @@ NoOpLoop::Run( Process &p )
    mean_ticks_to_spin = (uint64_t) ( (double) service_time * 
                                      (double) frequency );
 
-   for( int64_t it_index( 0 ); it_index < iterations; it_index++ )
+   int64_t it_index( 0 );
+   for(; it_index < iterations; it_index++ )
    {  
-      
       /* initialize timers */
       /* readTimeStampCounter will only work on x86 at the moment */
       const uint64_t tick_to_stop_on( 
             mean_ticks_to_spin + readTimeStampCounter() );
       /* TODO add variable distribution bit here, set outside of loop */
       volatile uint64_t final_tick( 0 );
-      p.SetRunning();
+      p.SetRunning( it_index );
       while( tick_to_stop_on >= (final_tick = readTimeStampCounter() ) )
       {
          __asm__ volatile("\
@@ -91,9 +94,9 @@ NoOpLoop::Run( Process &p )
                               :
                          );
       }
-      p.SetWaiting();
+      p.SetWaiting( it_index );
       /* wait for everyone to be waiting */
-      while( ! p.EveryoneWaiting() )
+      while( ! p.EveryoneWaiting( it_index ) )
       {
          continue;
       }
@@ -107,15 +110,15 @@ NoOpLoop::Run( Process &p )
       d.actual_stop_tick    = final_tick;
       p.SetData( (void*)&d,
                  it_index );
-      p.SetContinuing();
+      p.SetContinuing( it_index );
       /* wait for store ops to complete */
-      while( ! p.EveryoneContinuing() )
+      while( ! p.EveryoneContinuing( it_index ) )
       {
          continue;
       }
    }
-   p.SetDone();
-   while( ! p.EveryoneDone() )
+   p.SetDone( it_index );
+   while( ! p.EveryoneDone( it_index ) )
    {
       continue;
    }

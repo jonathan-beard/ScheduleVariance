@@ -26,6 +26,8 @@
 
 class CmdArgs;
 
+typedef int64_t status_t;
+
 template <class LoadType, class D > class HeavyProcess : public Process {
 public:
 
@@ -111,8 +113,8 @@ virtual ~HeavyProcess()
    {
       SHM::Close( shm_key_sync,
                   process_status,
-                  sizeof( ProcessStatus ),
-                  spawn /* #items */,
+                  sizeof( status_t ),
+                  spawn * ProcessStatus::N /* #items */,
                   false /* no zero */
                 );
    }
@@ -137,17 +139,13 @@ virtual void Launch()
    free( temp_sync );
   
    /* open the process_status shm */
-   process_status = (HeavyProcess<LoadType, D>::ProcessStatus*)
+   process_status = (status_t*)
                     SHM::Init( shm_key_sync,
-                               sizeof( ProcessStatus ),
-                               spawn );
+                               sizeof( int64_t ),
+                               spawn * ProcessStatus::N );
    
    assert( process_status != nullptr );
-   /* set everyone's status flag to NOTREADY */
-   for( int64_t index( 0 ); index < spawn; index++ )
-   {
-      process_status[index] = NOTREADY;
-   }
+   
    /* set the parent's store object */
    assert( store == nullptr );
    store = new Store<Data>( the_load.GetNumIterations(),
@@ -212,8 +210,7 @@ virtual void Launch()
             is_offspring = true;
             /* open SHM */
             process_status = nullptr;
-            process_status = (HeavyProcess<LoadType, D>::ProcessStatus*) 
-                              SHM::Open( shm_key_sync );
+            process_status = ( status_t* ) SHM::Open( shm_key_sync );
             assert( process_status != nullptr );
             
             my_id = j;
@@ -261,8 +258,8 @@ virtual void Launch()
    END:;
    delete( p_stat_data );
    p_stat_data = get_context_swaps_for_process( NULL );
-   SetReady();
-   while( ! EveryoneReady() )
+   SetReady( 0 );
+   while( ! EveryoneReady( 0 ) )
    {
       continue;
    }
@@ -275,8 +272,8 @@ virtual void Launch()
       /* close unmaps memory too */
       SHM::Close( shm_key_sync,
                   (void*) process_status,
-                  sizeof( ProcessStatus ),
-                  spawn /* nitems */,
+                  sizeof( status_t ),
+                  spawn * ProcessStatus::N /* nitems */,
                   false /* don't zero */
                 );
       exit( EXIT_SUCCESS );
@@ -305,7 +302,7 @@ virtual std::ostream& PrintHeader( std::ostream &stream )
 {
    stream << "Iteration" << "," << "ProcessID" << "," << "VoluntaryContextSwaps";
    stream << "," << "Non-VoluntaryContextswaps" << ",";
-   the_load.PrintHeader( stream ) << "\n";
+   the_load.PrintHeader( stream );
    return( stream );
 }
 
@@ -331,115 +328,55 @@ virtual void SetData( void *ptr, int64_t iteration )
                iteration );
 }
 
-virtual void SetReady()
+virtual void SetReady(int64_t iteration)
 {
-   assert( process_status != nullptr );
-   process_status[ my_id ] = READY;
+   SetStatus( my_id, iteration, ProcessStatus::READY);
 }
 
-virtual bool EveryoneReady()
+virtual bool EveryoneReady(int64_t iteration)
 {
-   assert( process_status != nullptr );
-   /* we have to wait till everyone is ready */
-   for( int64_t index( 0 ); index < spawn; index++ )
-   {
-      if( process_status[ index ] < READY ) return( false );
-   }
-   return( true );
+   return( CheckAllForStatus( iteration, ProcessStatus::READY ) );
 }
 
 
-virtual bool Reset()
+virtual void Reset(int64_t iteration)
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
-   process_status[ my_id ] = READY;
-   return( true );
+   SetStatus( my_id, iteration, ProcessStatus::READY );
 }
 
-virtual bool ResetAll()
-{  
-   /* TODO - decide if this is the intended behavior */
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
-   for( int64_t index( 0 ); index < spawn; index++ )
-   {
-      if( process_status[ index ] != DONE ){ 
-         return( false );
-      }
-   }
-   for( int64_t index( 0 ); index < spawn; index++ )
-   {
-      process_status[ index ] = READY;
-   }
-   return( true );
+virtual void SetRunning(int64_t iteration)
+{
+   SetStatus( my_id, iteration, ProcessStatus::RUNNING );
 }
 
-virtual void SetRunning()
+virtual void SetDone(int64_t iteration)
 {
-   assert( process_status != nullptr );
-   process_status[ my_id ] = RUNNING;
+   SetStatus( my_id, iteration, ProcessStatus::DONE );
 }
 
-virtual void SetDone()
+virtual void SetWaiting(int64_t iteration)
 {
-   assert( process_status != nullptr );
-   process_status[ my_id ] = DONE;
+   SetStatus( my_id, iteration, ProcessStatus::WAITING );
 }
 
-virtual void SetWaiting()
+virtual bool EveryoneDone(int64_t iteration)
 {
-   assert( process_status != nullptr );
-   process_status[ my_id ] = WAITING;
+   return( CheckAllForStatus( iteration, ProcessStatus::DONE ) );
 }
 
-virtual bool EveryoneDone()
+virtual void SetContinuing(int64_t iteration)
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
-   for( int64_t index( 0 ); index < spawn; index++ )
-   {
-      if( process_status[ index ] < DONE ) return( false );
-   }
-   return( true );
+   SetStatus( my_id, iteration, ProcessStatus::CONTINUING );
 }
 
-virtual void SetContinuing()
+virtual bool EveryoneContinuing(int64_t iteration)
 {
-   assert( process_status != nullptr );
-   process_status[ my_id ] = CONTINUING;
+   return( CheckAllForStatus( iteration, ProcessStatus::CONTINUING ) );
 }
 
-virtual bool EveryoneContinuing()
+virtual bool EveryoneWaiting( int64_t iteration )
 {
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
-   for( int64_t index( 0 ); index < spawn; index++ )
-   {
-      if( process_status[ index ] < CONTINUING ) return( false );
-   }
-   return( true );
-}
-
-virtual bool EveryoneWaiting()
-{
-   if( process_status == nullptr )
-   {
-      return( false );
-   }
-   for( int64_t index( 0 ); index < spawn; index++ )
-   {
-      if( process_status[ index ] < WAITING ) return( false );
-   }
-   return( true );
+   return( CheckAllForStatus( iteration, ProcessStatus::WAITING) );
 }
 
 protected:
@@ -449,6 +386,51 @@ protected:
    bool    is_offspring;
 
 private:
+   
+   /* TODO: this isn't ideal, but it'll work for this instance */
+   enum ProcessStatus : int8_t { NOTREADY = 0, 
+                                 READY, 
+                                 RUNNING, 
+                                 WAITING,
+                                 CONTINUING,
+                                 DONE,
+                                 N };
+
+   int64_t* GetStatusIndex( int64_t id, 
+                            int64_t iteration, 
+                            ProcessStatus flag )
+   {
+      const int64_t index( id + ( flag * spawn ) );
+      return( &process_status[index] );
+   }
+
+   bool  CheckAllForStatus( int64_t iteration,
+                            ProcessStatus flag )
+   {
+      if( process_status == nullptr )
+      {
+         return( false );
+      }
+
+      for( int64_t index( 0 ); index < spawn; index++ )
+      {
+         auto *val( GetStatusIndex( index, 
+                                    iteration, 
+                                    flag ) );
+         if( *val != iteration ) return( false );
+      }
+      return( true );
+   }
+
+   void SetStatus( int64_t id,
+                   int64_t iteration,
+                   ProcessStatus flag )
+   {
+      auto *val( GetStatusIndex( id, 
+                                 iteration,
+                                 flag ) );
+      *val = iteration;
+   }
 
    /* just remember ptrs are not carried accross fork */
    std::vector< pid_t > *list; 
@@ -456,16 +438,9 @@ private:
    char                  shm_key_sync[ SHM_KEY_LENGTH ];
    char                  shm_key_data[ SHM_KEY_LENGTH ];
 
-   /* TODO: this isn't ideal, but it'll work for this instance */
-   enum ProcessStatus : int8_t { NOTREADY = 0, 
-                                 READY, 
-                                 RUNNING, 
-                                 WAITING,
-                                 CONTINUING,
-                                 DONE };
    
    /* array for each process to keep their status */
-   ProcessStatus        *process_status;
+   int64_t              *process_status;
 
    template <class T> struct Store{
       Store(int64_t iterations, 

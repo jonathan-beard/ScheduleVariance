@@ -27,21 +27,31 @@ my %statsfunctions = (
                               }
                               elsif( $line eq "Values" )
                               {
-                                 return( `ps -A | wc -l` );
+                                 my $count = `ps -A | wc -l`;
+                                 chomp( $count );
+                                 return( $count );
                               }
                             },
    ProcessNumber     => sub {
                               my $line = shift;
                               if( $line eq "Header" )
                               {
-                                 return( "TotalProcesses" );
+                                 return( "LoadProcesses" );
                               }
                             }
 );
 
+## CHECK TO SEE IF EXE IS COMPILED ##
+if( ! -e "./svar" )
+{
+   print STDERR "svar doesn't exist, please build it\n";
+   exit( -1 );
+}
+
 
 ## GEN HEADER ##
 my $output = `./svar -print_header true`;
+chomp( $output );
 for (keys %statsfunctions )
 {
    $output .= ",";
@@ -59,6 +69,7 @@ for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
       my $cmd = "./svar -p# $procs -mu $mu -iterations $iterations";
       my $otherprocs = &{ $statsfunctions{ OtherProcessCount } }("Values");
       my $input = `$cmd`;
+      chomp( $input );
       my @lines = split /\n/, $input;
       foreach my $line (@lines ){
         $output .= $line.",".$otherprocs.",".$procs."\n"; 
@@ -66,7 +77,7 @@ for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
    }
 }
 
-open (OUTFILE, ">./output.txt");
+open (OUTFILE, ">./output.csv");
 print OUTFILE $output;
 close(OUTFILE);
 
