@@ -8,7 +8,7 @@ DARWIN =
 endif
 
 
-DEBUG = -g -O0
+#DEBUG = -g -O0
 CXXSTD = -std=c++11 $(DARWIN)
 CSTD = -std=c99
 

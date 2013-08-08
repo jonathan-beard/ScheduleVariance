@@ -29,7 +29,7 @@ my %statsfunctions = (
                               {
                                  return( `ps -A | wc -l` );
                               }
-                            }
+                            },
    ProcessNumber     => sub {
                               my $line = shift;
                               if( $line eq "Header" )
@@ -66,8 +66,8 @@ for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
    }
 }
 
-open OUTFILE, "<output.txt" or die "Couldn't open outfile!!";
+open (OUTFILE, ">./output.txt");
 print OUTFILE $output;
-close OUTFILE;
+close(OUTFILE);
 
 exit( 0 );
