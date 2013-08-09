@@ -7,11 +7,11 @@ use warnings;
 ### CONFIG PARAMS ####
 ######################
 my $min_mu = .25;
-my $max_mu = .5;
+my $max_mu = 10;
 my $mu_delta = .25;
 my $min_processes = 1;
-my $max_processes = 2;
-my $iterations = 10;
+my $max_processes = 20;
+my $iterations = 1000;
 my $core = 1;
 ######################
 #### END CONFIGS #####
