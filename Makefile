@@ -15,6 +15,8 @@ CSTD = -std=c99
 
 INC = -I./procstat
 
+OPS = 1000
+
 CXXFLAGS = -Wall -O2 $(CXXSTD) $(DEBUG) $(INC)
 CFLAGS = -Wall -O2 $(CSTD)  $(DEBUG) $(INC)
 
@@ -40,6 +42,7 @@ CLEANLIST =  $(OBJS) $(EXE)\
 all:  $(EXE)
 
 $(EXE): $(FILES)
+	./gen_noop_load.pl $(OPS)
 	$(MAKE) $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS)
 
