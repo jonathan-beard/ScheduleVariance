@@ -12,7 +12,6 @@
 #include "system_query.h"
 
 NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
-                                      iterations( 1 ),
                                       service_time( 60 ),
                                       deterministic( true ),
                                       distribution( Deterministic ),
@@ -20,11 +19,6 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
                                       frequency( 0 )
 {
    /* add specific command line arguments */
-   cmd_args.addOption( 
-         new Option< int64_t >( iterations,
-                                "-iterations",
-                                "Iterations to run load" ) );
-
    cmd_args.addOption(
          new Option< double >( service_time,
                                "-mu",
@@ -51,9 +45,7 @@ NoOpLoop::~NoOpLoop()
 std::ostream&
 NoOpLoop::PrintHeader( std::ostream &stream )
 {
-   stream << "Load" << "," << "Distribution" << "," << "ServiceTime";
-   stream << "," << "Frequency" << "," << "TicksToSpin" << ",";
-   stream << "TargetStopTick" << "," << "ActualStopTick" << "," << "TickDelta";
+   NoOpLoop::Data::PrintHeader( stream );
    return( stream );
 }
 
@@ -61,12 +53,7 @@ std::ostream&
 NoOpLoop::PrintData( std::ostream &stream, void *d )
 {
    NoOpLoop::Data *d_ptr( reinterpret_cast< NoOpLoop::Data* >( d ) );
-   stream << d_ptr->load_name << "," << 
-      DistributionString[ d_ptr->distribution ] << ",";
-   stream << d_ptr->service_time << "," << d_ptr->frequency << ",";
-   stream << d_ptr->mean_ticks_to_spin << "," << d_ptr->target_stop_tick << ",";
-   stream << d_ptr->actual_stop_tick << ",";
-   stream << ( d_ptr->actual_stop_tick - d_ptr->target_stop_tick );
+   NoOpLoop::Data::PrintData( stream, *d_ptr );
    return( stream );
 }
 
@@ -77,6 +64,7 @@ NoOpLoop::Run( Process &p )
                                      (double) frequency );
 
    int64_t it_index( 0 );
+   const auto iterations( GetNumIterations() );
    for(; it_index < iterations; it_index++ )
    {  
       /* initialize timers */
@@ -101,13 +89,12 @@ NoOpLoop::Run( Process &p )
          continue;
       }
       /* now that everyone is done, store the data */
-      NoOpLoop::Data d;
-      d.distribution = distribution;
-      d.service_time = service_time;
-      d.frequency    = frequency;
-      d.mean_ticks_to_spin = mean_ticks_to_spin;
-      d.target_stop_tick    = tick_to_stop_on;
-      d.actual_stop_tick    = final_tick;
+      NoOpLoop::Data d( distribution,
+                        service_time,
+                        frequency,
+                        mean_ticks_to_spin,
+                        tick_to_stop_on,
+                        final_tick );
       p.SetData( (void*)&d,
                  it_index );
       p.SetContinuing( it_index );

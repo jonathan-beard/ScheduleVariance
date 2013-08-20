@@ -16,20 +16,44 @@
 
 template <class T, int N> class OptionMultiple : public OptionBase {
 public:
+      /**
+       * Option - An option constructor for an option that
+       * sets multiple values.  It takes a std::array object
+       * of the values to be set as ptrs (Items), a flag (Flag), 
+       * a description of what the user is expected to be setting 
+       * (Description), another std::array which takes a special
+       * type conversion function for each value that you want to
+       * set in the array Items (must match the same index), a print
+       * behavior function which will allow the user to print each 
+       * default value within the array Items.  A nullptr is allowed
+       * for the PrintBehavior function if you want to let the std
+       * library take a shot at printing
+       * @param   Items - std::array< T, N>
+       * @param   Flag - std::string
+       * @param   Description - std::string
+       * @param   Functions - required functions which map the input
+       *          given from the command line to each value that the 
+       *          should be set in Items, each function must correspond
+       *          to the appropriate index in Items.  The first param
+       *          to the function is the cmd line string, the second
+       *          should be set by the function to true on success and
+       *          false on failure
+       * @param   PrintBehavior - takes in the current value T& and prints
+       *          it with whatever pretty behavior you desire, also optional
+       *          but recommended for all but very basic types
+       */
    OptionMultiple( std::array<T*, N > Items,
                    std::string        Flag,
                    std::string        Description,
-               std::array< std::function< T (const char* , bool&) >,N > Functions )
+               std::array< std::function< T (const char* , bool&) >,N > Functions
+               std::array< 
+                  std::function< std::string ( T& ) >, N >  PrintBehavior  = nullptr )
                      : OptionBase( Flag, Description, false ),
                        items( Items ),
-                       F( Functions ) 
+                       F( Functions ),
+                       PrettyPrint( PrintBehavior )
    {
-         /* assert what types are allowed */
-         assert( typeid(T) == typeid(bool) ||
-                 typeid(T) == typeid(int64_t) ||
-                 typeid(T) == typeid(double) ||
-                 typeid(T) == typeid(std::string) );
-         /* else fail assertion */
+      /* nothing really to do */
    }
 
    virtual std::string 
@@ -81,6 +105,7 @@ private:
 
    std::array<T*, N> items;
    std::array< std::function< T ( const char* , bool&) >, N > F;
+   std::array< std::function< std::string ( T& ) >, N >       PrettyPrint;
 };
 
 #endif /* END _COMMAND_OPTION_MULTIPLE_HPP_ */

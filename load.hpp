@@ -18,7 +18,9 @@ class Process;
 
 class Load {
 public:
-   
+   /**
+    * Data - extend this struct to save state 
+    */
    struct Data{
       Data()
       {
@@ -31,17 +33,65 @@ public:
       }
    }; 
    
+   /**
+    * Constructor - set the CmdArgs object that is created in 
+    * main.  Internally this will add whatever options this
+    * particular load object wants to throw in.
+    * @param   args - CmdArgs&
+    */
    Load( CmdArgs &args );
+
+   /**
+    * Destructor - clean up 
+    */
    virtual ~Load();
+
+   /**
+    * Run - Run the load, take in a process reference for
+    * data storage and synchronization
+    * @param   p - Process&
+    */
    virtual void Run( Process &p ) = 0;
 
-   virtual size_t GetNumIterations() = 0;
-
+   /**
+    * PrintHeader - print a header to this function to the stream.
+    * @param   stream - std::ostream&
+    * @return  std::ostream&
+    */
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
+
+   /**
+    * PrintData - method that lets the user define specific print
+    * methods for each data struct.  The struct itself is passed
+    * in as a void ptr, and is converted to the appropriate struct
+    * within each sub-class method.  The first param to this function
+    * is a valid stream to write the data.  This function will be
+    * called over and over for each available data element that
+    * is stored in the process object.
+    * @param   stream - std::ostream&
+    * @param   d      - void ptr
+    * @return  std::ostream&
+    */
    virtual std::ostream& PrintData( std::ostream &stream, void *d ) = 0;
+
+   /**
+    * GetNumIterations - returns the number of iterations to run
+    * this load for.  
+    * @return - int64_t
+    */
+   int64_t GetNumIterations();
    
 protected:
-   CmdArgs &cmd_args;
+   /**
+    * local reference to cmd args 
+    */
+   CmdArgs  &cmd_args;
+
+private:
+   /**
+    * # of iterations to run load 
+    */
+   int64_t  iterations;
 };
 
 #endif /* END _LOAD_HPP_ */

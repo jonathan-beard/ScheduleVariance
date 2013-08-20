@@ -8,12 +8,18 @@
 
 #include <cstdint>
 
-class NoOpLoopUnrolled : public NoOpLoop
+class NoOpLoopUnrolled : public Load
 {
    NoOpLoopUnrolled( CmdArgs &args );
    
+   virtual ~NoOpLoopUnrolled();
+
    virtual void Run( Process & p );
    
+   virtual size_t GetNumIterations();
+
+
+
    struct Data : public Load::Data{
       Data() : NoOpLoop::Data()
       {
