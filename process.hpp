@@ -14,6 +14,17 @@
 
 class Load;
 
+/* general status flags, add more if you need them */
+enum ProcessStatus : int8_t {
+                               NOTREADY   = 0,
+                               READY     ,
+                               RUNNING   ,
+                               WAITING   ,
+                               CONTINUING,
+                               DONE      ,
+                               N
+};
+
 class Process {
 public:
    Process( CmdArgs &cmd );
@@ -27,22 +38,9 @@ public:
    virtual std::ostream& PrintData( std::ostream &stream ) = 0;
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
 
-   
-   virtual void Reset( int64_t iteration ) = 0;
-  
-   virtual void SetRunning( int64_t iteration ) = 0;
-   
-   virtual void SetReady( int64_t iteration ) = 0;
-   virtual bool EveryoneReady( int64_t iteration ) = 0;
-   
-   virtual void SetDone( int64_t iteration ) = 0;
-   virtual bool EveryoneDone( int64_t iteration ) = 0;
-   
-   virtual void SetWaiting( int64_t iteration ) = 0;
-   virtual bool EveryoneWaiting( int64_t iteration ) = 0;
-   
-   virtual void SetContinuing( int64_t iteration ) = 0;
-   virtual bool EveryoneContinuing( int64_t iteration ) = 0;
+   virtual void SetStatus( int64_t iteration, ProcessStatus flag) = 0;
+
+   virtual bool IsEveryoneSetTo( int64_t iteration, ProcessStatus flag ) = 0;
 
 protected:
    CmdArgs &cmd_args;

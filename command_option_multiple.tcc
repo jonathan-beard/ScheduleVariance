@@ -45,9 +45,8 @@ public:
    OptionMultiple( std::array<T*, N > Items,
                    std::string        Flag,
                    std::string        Description,
-               std::array< std::function< T (const char* , bool&) >,N > Functions
-               std::array< 
-                  std::function< std::string ( T& ) >, N >  PrintBehavior  = nullptr )
+               std::array< std::function< T (const char* , bool&) >,N > Functions,
+               std::function< std::string ( T& ) > PrintBehavior  = nullptr )
                      : OptionBase( Flag, Description, false ),
                        items( Items ),
                        F( Functions ),
@@ -82,16 +81,21 @@ public:
 
 
 private:
-   std::string format_item( T x ){
-      std::stringstream out;
-      out << x;
-      if( typeid(x) == typeid(bool) ){
+   std::string format_item( T &x ){
+      if( PrettyPrint != nullptr )
+      {
+         return( PrettyPrint( x ) );
+      }
+      else if( typeid(x) == typeid(bool) )
+      {
          if( *((bool*)(&x))  == true){
             return("true");
          }else{
             return("false");
          }
-      }else if( typeid(x) == typeid(double) ){
+      }
+      else if( typeid(x) == typeid(double) )
+      {
          char buffer[100];
          memset(buffer, '\0', sizeof(char) * 100);
          snprintf(buffer, 100, "%0.3f", *((double*)(&x)));
@@ -99,13 +103,17 @@ private:
          ss << buffer;
          return( ss.str() );
       }
-      /* this should be the string case */ 
-      return( out.str() );
+      else
+      {
+         std::stringstream out;
+         out << x;
+         return( out.str() );
+      }
    }
 
    std::array<T*, N> items;
    std::array< std::function< T ( const char* , bool&) >, N > F;
-   std::array< std::function< std::string ( T& ) >, N >       PrettyPrint;
+   std::function< std::string ( T& ) > PrettyPrint;
 };
 
 #endif /* END _COMMAND_OPTION_MULTIPLE_HPP_ */

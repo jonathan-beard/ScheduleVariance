@@ -35,6 +35,7 @@ main( int argc, char **argv )
                                  v = true;
                                  return( true );
                              },
+                             nullptr,
                              true ) );
   
    static bool print_header( false );

@@ -28,6 +28,8 @@ public:
                        HyperExponential,
                        N };
    
+   static const char *DistributionString[N];
+   
 
    /* these will be allocated by the calling test harness */
 #define LOAD_LENGTH 40
@@ -96,13 +98,6 @@ public:
    
       static void PrintData( std::ostream &stream, Data &d )
       {
-         const char *DistributionString[N] =
-         {
-            [Deterministic] = "Deterministic",
-            [Uniform]       = "Uniform",
-            [Exponential]   = "Exponential",
-            [HyperExponential] = "HyperExponential"
-         };
          stream << d.load_name << "," << 
             DistributionString[ d.distribution ] << ",";
          stream << d.service_time << "," << d.frequency << ",";
@@ -115,8 +110,7 @@ public:
 
 private:
    double         service_time;
-   bool           deterministic;
-   int64_t        distribution;
+   Distribution   distribution;
    uint64_t       mean_ticks_to_spin;
    uint64_t       frequency;
 }; 

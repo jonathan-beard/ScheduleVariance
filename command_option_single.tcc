@@ -28,6 +28,30 @@ template <class T> class Option : public OptionBase {
        * @param   in - T&
        * @param   Flag - std::string
        * @param   Description - std::string
+       * @param   Help - bool - set true if this is intended to be a help 
+       *          function
+       */
+      Option(T &in, 
+             std::string Flag, 
+             std::string Description,
+             bool Help = false) : OptionBase( Flag, Description, Help ),
+                                  item( in )
+      { 
+         /* nothing really to do */
+      }
+      /**
+       * Option - An option constructor for an option that
+       * sets a single value.  It takes a reference to what
+       * we're setting (in), a flag (Flag), a description of
+       * what the user is expected to be setting (Description),
+       * a function that is used if any special type coversion is
+       * needed (TypeConversion) which can be set to nullptr if no
+       * type conversion is wanted, next there's another function
+       * that can specify custum print behavior (PrintBehavior) which 
+       * is also set to nullptr by default
+       * @param   in - T&
+       * @param   Flag - std::string
+       * @param   Description - std::string
        * @param   TypeConversion - custom type conversion function,
        *          takes in the char string and a bool argument as params,
        *          the char* is the cmd line argument, the bool should be
@@ -40,8 +64,8 @@ template <class T> class Option : public OptionBase {
       Option(T &in, 
              std::string Flag, 
              std::string Description,
-             std::function< T (const char *, bool&) > TypeConversion = nullptr,
-             std::function< std::string ( T& ) >      PrintBehavior  = nullptr,
+             std::function< T (const char *, bool&) > TypeConversion,
+             std::function< std::string ( T& ) >      PrintBehavior,
              bool Help = false) : OptionBase( Flag, Description, Help ),
                                   item( in ),
                                   F( TypeConversion ),
@@ -104,7 +128,7 @@ template <class T> class Option : public OptionBase {
        * one stop shopping (hopefully) for printing
        * everything we could want 
        */
-      std::string format_item( T x ){
+      std::string format_item( T &x ){
          if( PrettyPrint != nullptr )
          {
             return( PrettyPrint( x ) );

@@ -11,9 +11,17 @@
 
 #include "system_query.h"
 
+const char *NoOpLoop::DistributionString[N] =
+   {
+      [Deterministic] = "Deterministic",
+      [Uniform]       = "Uniform",
+      [Exponential]   = "Exponential",
+      [HyperExponential] = "HyperExponential"
+   };
+
+
 NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
                                       service_time( 60 ),
-                                      deterministic( true ),
                                       distribution( Deterministic ),
                                       mean_ticks_to_spin( 0 ),
                                       frequency( 0 )
@@ -24,14 +32,44 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
                                "-mu",
                                "Service rate for load" ) );
    cmd_args.addOption(
-         new Option< bool >( deterministic,
-                          "-deterministic",
-                          "Set false if you want an alternate distribution" ) );
-
-   cmd_args.addOption(
-         new Option< int64_t >( distribution,
-                                "-distribution",
- "Set the distribution, string of: (Deterministic,Uniform,Exponential,HyperExponential" ) );
+         new Option< Distribution >( distribution,
+                                     "-distribution",
+ "Set the distribution, string of: (Deterministic,Uniform,Exponential,HyperExponential",
+         [](const char *str, bool &success)
+         {  
+            success = true;
+            if( str == nullptr )
+            {
+               success = false;
+               return( Deterministic );
+            }
+            else if( strcmp( str, DistributionString[ Deterministic ] ) == 0 )
+            {
+               return( Deterministic );
+            }
+            else if( strcmp( str, DistributionString[ Uniform ] ) == 0 )
+            {
+               return( Uniform );
+            }  
+            else if( strcmp( str, DistributionString[ Exponential] ) == 0 )
+            {
+               return( Exponential );
+            }
+            else if( strcmp( str, DistributionString[ HyperExponential ] ) == 0 )
+            {
+               return( HyperExponential );
+            }
+            else
+            {
+               success = false;
+               return( Deterministic );
+            }
+         },
+         []( Distribution &d )
+         {
+            const std::string out( DistributionString[ d ] );
+            return( out );
+         } ) );
 
    /* set mean ticks to spin */
    frequency = getStatedCPUFrequency();
@@ -73,7 +111,7 @@ NoOpLoop::Run( Process &p )
             mean_ticks_to_spin + readTimeStampCounter() );
       /* TODO add variable distribution bit here, set outside of loop */
       volatile uint64_t final_tick( 0 );
-      p.SetRunning( it_index );
+      p.SetStatus( it_index, ProcessStatus::RUNNING );
       while( tick_to_stop_on >= (final_tick = readTimeStampCounter() ) )
       {
          __asm__ volatile("\
@@ -82,9 +120,9 @@ NoOpLoop::Run( Process &p )
                               :
                          );
       }
-      p.SetWaiting( it_index );
+      p.SetStatus( it_index, ProcessStatus::WAITING );
       /* wait for everyone to be waiting */
-      while( ! p.EveryoneWaiting( it_index ) )
+      while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::WAITING ) )
       {
          continue;
       }
@@ -97,23 +135,18 @@ NoOpLoop::Run( Process &p )
                         final_tick );
       p.SetData( (void*)&d,
                  it_index );
-      p.SetContinuing( it_index );
+      p.SetStatus( it_index, 
+                   ProcessStatus::CONTINUING );
       /* wait for store ops to complete */
-      while( ! p.EveryoneContinuing( it_index ) )
+      while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::CONTINUING ) )
       {
          continue;
       }
    }
-   p.SetDone( it_index );
-   while( ! p.EveryoneDone( it_index ) )
+   p.SetStatus( it_index, ProcessStatus::DONE );
+   while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::DONE ) )
    {
       continue;
    }
    /* wait for everyone else to finish then exit */
-}
-
-size_t 
-NoOpLoop::GetNumIterations()
-{
-   return( (size_t) iterations );
 }

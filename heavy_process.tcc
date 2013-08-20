@@ -99,7 +99,33 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                     } /* else */
                                     succ = false;
                                     return( SCHED_OTHER );
-                                }) );
+                                },
+                                []( int64_t &val )
+                                {
+                                    switch( val )
+                                    {
+                                       case( SCHED_OTHER ):
+                                       {
+                                          return( "SCHED_OTHER" );
+                                       }
+                                       break;
+                                       case( SCHED_FIFO ):
+                                       {
+                                          return( "SCHED_FIFO" );
+                                       }
+                                       break;
+                                       case( SCHED_RR ):
+                                       {
+                                          return( "SCHED_RR" );
+                                       }
+                                       break;
+                                       default:
+                                       {
+                                          return( "Unknown Scheduler" );
+                                       }
+                                    }
+                                }
+                                ) );
 
    /* this will be for the parent process only */                                
    list = new std::vector< pid_t >();
@@ -258,8 +284,10 @@ virtual void Launch()
    END:;
    delete( p_stat_data );
    p_stat_data = get_context_swaps_for_process( NULL );
-   SetReady( 0 );
-   while( ! EveryoneReady( 0 ) )
+   SetStatus( 0                    /* iteration */, 
+              ProcessStatus::READY /* flag */ );
+   while( ! IsEveryoneSetTo( 0 /* iteration */, 
+                             ProcessStatus::READY /* flag */ ) )
    {
       continue;
    }
@@ -283,7 +311,8 @@ virtual void Launch()
     */
 }
 
-virtual std::ostream& PrintData( std::ostream &stream )
+virtual std::ostream& 
+PrintData( std::ostream &stream )
 {
    const int64_t length( spawn * the_load.GetNumIterations() );
    for( int64_t index( 0 ); index < length; index++ )
@@ -298,7 +327,8 @@ virtual std::ostream& PrintData( std::ostream &stream )
    return( stream );
 }
 
-virtual std::ostream& PrintHeader( std::ostream &stream )
+virtual std::ostream& 
+PrintHeader( std::ostream &stream )
 {
    stream << "Iteration" << "," << "ProcessID" << "," << "VoluntaryContextSwaps";
    stream << "," << "Non-VoluntaryContextswaps" << ",";
@@ -306,7 +336,8 @@ virtual std::ostream& PrintHeader( std::ostream &stream )
    return( stream );
 }
 
-virtual void SetData( void *ptr, int64_t iteration )
+virtual void 
+SetData( void *ptr, int64_t iteration )
 {
    assert( store != nullptr );
    assert( iteration >= 0 );
@@ -328,55 +359,20 @@ virtual void SetData( void *ptr, int64_t iteration )
                iteration );
 }
 
-virtual void SetReady(int64_t iteration)
+virtual void 
+SetStatus( int64_t iteration, ProcessStatus flag )
 {
-   SetStatus( my_id, iteration, ProcessStatus::READY);
+   /* flag = -1 would be bad for subsequent code */
+   assert( flag >= 0 );
+   SetStatus( my_id, iteration, flag );
 }
 
-virtual bool EveryoneReady(int64_t iteration)
+virtual bool 
+IsEveryoneSetTo( int64_t iteration, ProcessStatus flag )
 {
-   return( CheckAllForStatus( iteration, ProcessStatus::READY ) );
-}
-
-
-virtual void Reset(int64_t iteration)
-{
-   SetStatus( my_id, iteration, ProcessStatus::READY );
-}
-
-virtual void SetRunning(int64_t iteration)
-{
-   SetStatus( my_id, iteration, ProcessStatus::RUNNING );
-}
-
-virtual void SetDone(int64_t iteration)
-{
-   SetStatus( my_id, iteration, ProcessStatus::DONE );
-}
-
-virtual void SetWaiting(int64_t iteration)
-{
-   SetStatus( my_id, iteration, ProcessStatus::WAITING );
-}
-
-virtual bool EveryoneDone(int64_t iteration)
-{
-   return( CheckAllForStatus( iteration, ProcessStatus::DONE ) );
-}
-
-virtual void SetContinuing(int64_t iteration)
-{
-   SetStatus( my_id, iteration, ProcessStatus::CONTINUING );
-}
-
-virtual bool EveryoneContinuing(int64_t iteration)
-{
-   return( CheckAllForStatus( iteration, ProcessStatus::CONTINUING ) );
-}
-
-virtual bool EveryoneWaiting( int64_t iteration )
-{
-   return( CheckAllForStatus( iteration, ProcessStatus::WAITING) );
+   /* flag = -1 would be bad for subsequent code */
+   assert( flag >= 0 );
+   return( CheckAllForStatus( iteration, flag ) );
 }
 
 protected:
@@ -386,26 +382,17 @@ protected:
    bool    is_offspring;
 
 private:
-   
-   /* TODO: this isn't ideal, but it'll work for this instance */
-   enum ProcessStatus : int8_t { NOTREADY = 0, 
-                                 READY, 
-                                 RUNNING, 
-                                 WAITING,
-                                 CONTINUING,
-                                 DONE,
-                                 N };
 
-   int64_t* GetStatusIndex( int64_t id, 
-                            int64_t iteration, 
-                            ProcessStatus flag )
+   int64_t* GetStatusIndex( int64_t           id, 
+                            int64_t           iteration, 
+                            ProcessStatus     flag )
    {
       const int64_t index( id + ( flag * spawn ) );
       return( &process_status[index] );
    }
 
-   bool  CheckAllForStatus( int64_t iteration,
-                            ProcessStatus flag )
+   bool  CheckAllForStatus( int64_t           iteration,
+                            ProcessStatus     flag )
    {
       if( process_status == nullptr )
       {
@@ -422,9 +409,9 @@ private:
       return( true );
    }
 
-   void SetStatus( int64_t id,
-                   int64_t iteration,
-                   ProcessStatus flag )
+   void SetStatus( int64_t           id,
+                   int64_t           iteration,
+                   ProcessStatus     flag )
    {
       auto *val( GetStatusIndex( id, 
                                  iteration,
@@ -531,7 +518,7 @@ private:
 
    Store<Data>          *store;
    int64_t              my_id;
-   ProcStatusData         *p_stat_data;
+   ProcStatusData       *p_stat_data;
 };
 
 #endif /* END _HEAVY_PROCESS_HPP_ */
