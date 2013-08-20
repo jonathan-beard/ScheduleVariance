@@ -8,7 +8,7 @@ DARWIN =
 endif
 
 
-#DEBUG = -g -O0
+DEBUG = -g -O0
 CXXSTD = -std=c++11 $(DARWIN)
 CSTD = -std=c99
 
@@ -28,7 +28,7 @@ LDFLAGS = -L./procstat -L.
 LIBS = -lrt -lprocstat
 
 CPPOBJ = main command_arguments command_option_base process \
-			load noop_loop shm
+			load noop_loop shm noop_loop_unrolled
 
 COBJ	= system_query getrandom
 

@@ -71,7 +71,6 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
             return( out );
          } ) );
 
-   /* set mean ticks to spin */
    frequency = getStatedCPUFrequency();
 }
 

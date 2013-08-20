@@ -65,7 +65,7 @@ public:
          load_name[4] = '\0';
       }
     
-      Data( const Data &d )
+      Data( const Data &d ) : Load::Data()
       {
          /* not ideal, but it'll work for now */
          for( int i = 0; i < LOAD_LENGTH; i++ )

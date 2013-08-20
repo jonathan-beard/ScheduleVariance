@@ -1,41 +1,46 @@
+#include <sys/types.h>
+#include <unistd.h>
+
+#include "system_query.h"
+
+#include "process.hpp"
 #include "noop_loop_unrolled.hpp"
 
-NoOpLoopUnrolled::NoOpLoopUnrolled( CmdArgs &args ) : NoOpLoop( args )
+NoOpLoopUnrolled::NoOpLoopUnrolled( CmdArgs &args ) : Load( args )
 {
-   /* nothing to do here */
+   frequency = getStatedCPUFrequency();
 }
 
 void 
 NoOpLoopUnrolled::Run( Process & p )
 {
    int64_t it_index( 0 );
+   const auto iterations( GetNumIterations() );
    for(; it_index < iterations; it_index++ )
    {
-      p.SetRunning( it_index );
+      p.SetStatus( it_index , ProcessStatus::RUNNING );
       /* A bit hacky but it'll work */
 #include "noop_loop_unrolled_load.cpp"         
-      p.SetWaiting( it_index );
-      while( ! p.Everyonewaiting( it_index ) )
+      p.SetStatus( it_index, ProcessStatus::WAITING );
+      while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::WAITING ) )
       {
          continue;
       }
-      NopLoopUnrolled::Data d;
-      d.distribution = distribution;
-      d.service_time = service_time;
-      d.frequency    = frequency;
-      d.mean_ticks_to_spin = mean_ticks_to_spin;
-      d.target_stop_tick   = tick_to_stop_on;
-      d.actual_stop_tick   = final_tick;
+      NopLoopUnrolled::Data d( theNoopCount,
+                               frequency,
+                               cyclesBefore,
+                               cyclesAfter,
+                               diff );
       p.SetData( (void*) &d ,
                  it_index );
-      p.SetContinuing( it_index );
-      while( ! p.EveryoneContinuing( it_index ) )
+      p.SetContinuing( it_index, ProcessStatus::CONTINUING );
+      while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::CONTINUING ) )
       {
          continue;
       }
    }
-   p.SetDone( it_index );
-   while( ! p.EveryoneDone( it_index ) )
+   p.SetStatus( it_index, ProcessStatus::DONE );
+   while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::DONE ) )
    {
       continue;
    }
@@ -45,5 +50,14 @@ NoOpLoopUnrolled::Run( Process & p )
 std::ostream&
 NoOpLoopUnrolled::PrintHeader( std::ostream &stream )
 {
+   NoOpLoopUnrolled::Data::PrintHeader( stream );
+   return( stream );
+}
 
+std::ostream&
+NoOpLoopUnrolled::PrintData( std::ostream &stream, void *d )
+{
+   NoOpLoopUnrolled::Data *d_ptr( reinterpret_cast< 
+                                    NoOpLoopUnrolled::Data* >( d ) );
+   NoOpLoopUnrolled::Data::PrintData( stream, *d_ptr );                               return( stream );
 }

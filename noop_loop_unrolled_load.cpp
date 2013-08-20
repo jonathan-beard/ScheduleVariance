@@ -1,4 +1,11 @@
-__asm__ volatile("\                 nop
+uint64_t highBitsBefore = 0x0, lowBitsBefore = 0x0;
+uint64_t highBitsAfter = 0x0, lowBitsAfter = 0x0;
+uint64_t theNoopCount = 1000;
+__asm__ volatile("\lfence                            
+\rdtsc                             
+\movq     %%rax, %[lowb]           
+\movq     %%rdx, %[highb]          
+\                 nop
                  nop
                  nop
                  nop
@@ -998,6 +1005,18 @@ __asm__ volatile("\                 nop
                  nop
                  nop
                  nop
-                ":
+lfence                            
+\rdtsc                             
+\movq     %%rax, %[lowa]           
+\movq     %%rdx, %[higha]          
+\                ":
+      [lowb]    "=r" (lowBitsBefore),
+      [highb]   "=r" (highBitsBefore),
+      [lowa]    "=r" (lowBitsAfter),
+      [higha]   "=r" (highBitsAfter)
                   :
-                 ;
+"rax","rdx"                  ;uint64_t cyclesbefore
+                     = (lowBitsBefore & 0xffffffff) | (highBitsBefore << 32);
+uint64_t cyclesafter
+                     = (lowBitsAfter & 0xffffffff) | (highBitsAfter << 32);
+uint64_t diff = cyclesbefore - cyclesafter;

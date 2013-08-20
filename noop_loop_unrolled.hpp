@@ -7,36 +7,77 @@
 #define _NOOP_LOOP_UNROLLED_HPP_  1
 
 #include <cstdint>
+#include "load.hpp"
+
+class Process;
 
 class NoOpLoopUnrolled : public Load
 {
+public:
    NoOpLoopUnrolled( CmdArgs &args );
    
    virtual ~NoOpLoopUnrolled();
 
    virtual void Run( Process & p );
    
-   virtual size_t GetNumIterations();
-
-
-
-   struct Data : public Load::Data{
-      Data() : NoOpLoop::Data()
-      {
-         load_name[4] = '_';
-         load_name[5] = 'u';
-         load_name[6] = 'n';
-         load_name[7] = 'r';
-         load_name[8] = 'o';
-         load_name[9] = 'l';
-         load_name[10] = 'l';
-         load_name[11] = 'e';
-         load_name[12] = 'd';
-         load_name[13] = '\0';
-      }
-   };
-
    virtual std::ostream& PrintHeader( std::ostream &stream );
+   virtual std::ostream& PrintData( std::ostream &stream, void *d );
+   
+
+
+#define LOAD_LENGTH 40
+   struct Data : public Load::Data{
+      Data() : Load::Data() , noop_count( 0 ),
+                              frequency( 0 ),
+                              cycles_start( 0 ),
+                              cycles_end( 0 ),
+                              diff( 0 )
+      {
+      }
+      
+      Data(uint64_t noopCount,
+           uint64_t freq,
+           uint64_t cyclesStart,
+           uint64_t cyclesEnd,
+           uint64_t delta ) :  Load::Data(), noop_count( noopCount ),
+                                             frequency( freq ),
+                                             cycles_start( cyclesStart ),
+                                             cycles_end( cyclesEnd ),
+                                             diff( delta )
+      {
+      }
+   
+      Data( const Data &d ) : Load::Data()
+      {
+         noop_count = d.noop_count;
+         frequency = d.frequency;
+         cycles_start = d.cycles_start;
+         cycles_end = d.cycles_end;
+         diff = d.diff;
+      }
+
+      static void PrintHeader( std::ostream &stream )
+      {
+         stream << "Load, Frequency, NoopCount, CyclesStart, CyclesEnd, Delta";
+      }
+
+      static void PrintData( std::ostream &stream, Data &d )
+      {
+         stream << d.load_name << "," << d.frequency << "," << d.noop_count;
+         stream << "," << d.cycles_start << "," << d.cycles_end << ",";
+         stream << d.diff;
+      }
+
+      const char load_name[LOAD_LENGTH] = "noop_unrolled\0";
+      uint64_t noop_count;
+      uint64_t frequency;
+      uint64_t cycles_start;
+      uint64_t cycles_end;
+      uint64_t diff;
+   };
+#undef LOAD_LENGTH
+private:
+   uint64_t frequency;
 };
 
 #endif /* END _NOOP_LOOP_UNROLLED_HPP_ */
