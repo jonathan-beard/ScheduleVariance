@@ -15,7 +15,7 @@ CSTD = -std=c99
 
 INC = -I./procstat
 
-OPS = 10
+OPS = 10000
 
 CXXFLAGS = -Wall -O2 $(CXXSTD) $(DEBUG) $(INC)
 CFLAGS = -Wall -O2 $(CSTD)  $(DEBUG) $(INC)
