@@ -29,4 +29,4 @@ Optionally:
 Design a new load by extending load.hpp base class.
 
 Things to do:
-Finish threading implementation Aug 7, 2012
+1) Fix synchronization
