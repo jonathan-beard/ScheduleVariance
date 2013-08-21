@@ -48,7 +48,7 @@ main( int argc, char **argv )
    /* initialize processes & tests */
    Process *process( nullptr );
 
-   process = new HeavyProcess<NoOpLoop, NoOpLoop::Data >( cmd );
+   process = new HeavyProcess<NoOpLoopUnrolled, NoOpLoopUnrolled::Data >( cmd );
 
    assert( process != nullptr );
 

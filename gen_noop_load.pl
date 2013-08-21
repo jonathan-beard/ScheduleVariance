@@ -41,6 +41,6 @@ print OUTFILE     "uint64_t cyclesbefore
                      = (lowBitsBefore & 0xffffffff) | (highBitsBefore << 32);\n";
 print OUTFILE     "uint64_t cyclesafter
                      = (lowBitsAfter & 0xffffffff) | (highBitsAfter << 32);\n";
-print OUTFILE     "uint64_t diff = cyclesbefore - cyclesafter;\n";                     
+print OUTFILE     "uint64_t diff = cyclesafter - cyclesbefore;\n";                     
 close OUTFILE;
 exit( 0 );

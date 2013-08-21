@@ -10023,4 +10023,4 @@ uint64_t cyclesbefore
                      = (lowBitsBefore & 0xffffffff) | (highBitsBefore << 32);
 uint64_t cyclesafter
                      = (lowBitsAfter & 0xffffffff) | (highBitsAfter << 32);
-uint64_t diff = cyclesbefore - cyclesafter;
+uint64_t diff = cyclesafter - cyclesbefore;
