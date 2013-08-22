@@ -16,6 +16,10 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/types.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "procstat.h"
 #include "shm.hpp"
 
@@ -168,16 +172,19 @@ virtual void Launch()
    process_status = (status_t*)
                     SHM::Init( shm_key_sync,
                                sizeof( int64_t ),
-                               spawn * ProcessStatus::N );
+                               1 /* only ready at the moment */ );
    
    assert( process_status != nullptr );
    
    /* set the parent's store object */
    assert( store == nullptr );
-   store = new Store<Data>( the_load.GetNumIterations(),
+
+   store = new (std::nothrow ) Store<Data>( 
+                            get_iterations(),
                             my_id /* should be parent in this case */,
                             spawn,
                             shm_key_data );
+
    assert( store != nullptr );                         
 
    const int success( 0 );
@@ -224,105 +231,115 @@ virtual void Launch()
       perror( "Failed to set processor affinity" );
       exit( EXIT_FAILURE );
    }
-   pid_t child( 0 ); 
-   for( int64_t j( 1 ); j < spawn; j++ )
+   /* start iterations loop here */
+   for(; get_curr_iteration() < get_iterations(); 
+                                             increment_curr_iteration() )
    {
-      child = fork();
-      switch( child )
+      pid_t child( 0 ); 
+      for( int64_t j( 1 ); j < spawn; j++ )
       {
-         case( 0 /* CHILD */ ):
-         {  
-            /* tell yourself you're a child */
-            is_offspring = true;
-            /* open SHM */
-            process_status = nullptr;
-            process_status = ( status_t* ) SHM::Open( shm_key_sync );
-            assert( process_status != nullptr );
-            
-            my_id = j;
-            /* open store */
-            store = nullptr;
-            store = new Store<Data>( the_load.GetNumIterations() , 
-                                     my_id,
-                                     spawn,
-                                     shm_key_data );
-            assert( store != nullptr );                                  
-            goto END;
-         }
-         break;
-         case( -1 /* FAILURE, THIS IS PARENT */ ):
+         child = fork();
+         switch( child )
          {
-            std::stringstream err;
-            /* need to keep a list of all child processes and kill them */
-            for( pid_t id : *list )
-            {
-               if( kill( id, SIGQUIT ) != success )
-               {
-                  err << "Failed to kill pid ( " << id << " )\n";
-               }
-            }
-            const std::string err_str( err.str() );
-            if( err_str.length() > 0 )
-            {
-               std::cerr << err_str << "\n";
+            case( 0 /* CHILD */ ):
+            {  
+               /* tell yourself you're a child */
+               is_offspring = true;
+               /* open SHM */
+               process_status = nullptr;
+               process_status = ( status_t* ) SHM::Open( shm_key_sync );
+               assert( process_status != nullptr );
                
+               my_id = j;
+               /* open store */
+               store = nullptr;
+               store = new (std::nothrow )Store<Data>( 
+                                        get_iterations(), 
+                                        my_id,
+                                        spawn,
+                                        shm_key_data );
+               assert( store != nullptr );   
+               goto END;
             }
-            exit( EXIT_FAILURE );
-         }
-         break;
-         default: /* this is the PARENT */
-         {
-            if( list == nullptr )
+            break;
+            case( -1 /* FAILURE, THIS IS PARENT */ ):
             {
-               list = new std::vector< pid_t >();
+               std::stringstream err;
+               for( pid_t id : *list )
+               {
+                  if( kill( id, SIGQUIT ) != success )
+                  {
+                     err << "Failed to kill pid ( " << id << " )\n";
+                  }
+               }
+               const std::string err_str( err.str() );
+               if( err_str.length() > 0 )
+               {
+                  std::cerr << err_str << "\n";
+                  
+               }
+               exit( EXIT_FAILURE );
             }
-            list->push_back( child );
-            continue;
+            break;
+            default: /* this is the PARENT */
+            {
+               if( list == nullptr )
+               {
+                  list = new std::vector< pid_t >();
+               }
+               list->push_back( child );
+               continue;
+            }
          }
       }
+      END:;
+      delete( p_stat_data );
+      p_stat_data = get_context_swaps_for_process( NULL );
+      SetStatus( 0                    /* iteration */, 
+                 ProcessStatus::READY /* flag */ );
+      while( ! IsEveryoneSetTo( 0 /* iteration */, 
+                                ProcessStatus::READY /* flag */ ) )
+      {
+         continue;
+      }
+      /* lets do something, the load will control the process */
+      the_load.Run( *this );
+      /* control is now back to here, shutdown shm */
+      if( is_offspring ){
+         /* takes care of unlinking & closing SHM */
+         delete( store );
+         shm_unlink( shm_key_sync );
+         /* close unmaps memory too */
+#if(0)
+         SHM::Close( shm_key_sync,
+                     (void*) process_status,
+                     sizeof( status_t ),
+                     spawn * ProcessStatus::N /* nitems */,
+                     false /* don't zero */
+                   );
+#endif                   
+         exit( EXIT_SUCCESS );
+      }
+      /* all the child procs are dead, go back and start this again */
    }
-   END:;
-   delete( p_stat_data );
-   p_stat_data = get_context_swaps_for_process( NULL );
-   SetStatus( 0                    /* iteration */, 
-              ProcessStatus::READY /* flag */ );
-   while( ! IsEveryoneSetTo( 0 /* iteration */, 
-                             ProcessStatus::READY /* flag */ ) )
-   {
-      continue;
-   }
-   /* lets do something, the load will control the process */
-   the_load.Run( *this );
-   /* control is now back to here, shutdown shm */
-   if( is_offspring ){
-      /* takes care of unlinking & closing SHM */
-      delete( store );
-      /* close unmaps memory too */
-      SHM::Close( shm_key_sync,
-                  (void*) process_status,
-                  sizeof( status_t ),
-                  spawn * ProcessStatus::N /* nitems */,
-                  false /* don't zero */
-                );
-      exit( EXIT_SUCCESS );
-   }
-   /* else 
-      if( ! is_offspring ) main will call delete 
-    */
 }
 
 virtual std::ostream& 
 PrintData( std::ostream &stream )
 {
-   const int64_t length( spawn * the_load.GetNumIterations() );
+   const int64_t length( spawn * get_iterations() );
    for( int64_t index( 0 ); index < length; index++ )
    {
       /* a little hacky I admit, but it works */
       stream << store->data[index].it << "," << 
       store->data[index].p_id << ",";
-      stream << store->data[index].proc_stat_data.voluntary_context_swaps << ",";
-      stream << store->data[index].proc_stat_data.non_voluntary_context_swaps << ",";
-      the_load.PrintData( stream, (void*) (&(store->data)[index].d) ) << "\n";
+      stream << 
+         store->data[index].proc_stat_data.voluntary_context_swaps << ",";
+      stream << 
+         store->data[index].proc_stat_data.non_voluntary_context_swaps 
+            << ",";
+      the_load.PrintData( stream, 
+                          (void*) (&(store->data)[index].d) ) << "\n";
    }
    return( stream );
 }
@@ -330,28 +347,34 @@ PrintData( std::ostream &stream )
 virtual std::ostream& 
 PrintHeader( std::ostream &stream )
 {
-   stream << "Iteration" << "," << "ProcessID" << "," << "VoluntaryContextSwaps";
+   stream << "Iteration" << "," << "ProcessID" << "," 
+      << "VoluntaryContextSwaps";
    stream << "," << "Non-VoluntaryContextswaps" << ",";
    the_load.PrintHeader( stream );
    return( stream );
 }
 
 virtual void 
-SetData( void *ptr, int64_t iteration )
+SetData( void *ptr )
 {
    assert( store != nullptr );
-   assert( iteration >= 0 );
    D *d_ptr( reinterpret_cast< D* >( ptr ) );
    ProcStatusData *temp( nullptr );
-   temp = get_context_swaps_for_process( NULL );
+   temp = get_context_swaps_for_process( NULL /* self */ );
    assert( temp != nullptr );
    ProcStatusData diff;
    diff.voluntary_context_swaps = 
-      temp->voluntary_context_swaps - p_stat_data->voluntary_context_swaps;
+      temp->voluntary_context_swaps - 
+         p_stat_data->voluntary_context_swaps;
    diff.non_voluntary_context_swaps = 
-      temp->non_voluntary_context_swaps - p_stat_data->non_voluntary_context_swaps;
+      temp->non_voluntary_context_swaps - 
+         p_stat_data->non_voluntary_context_swaps;
    /* yes there is a whole lot of copying going on */
-   Data process_data( iteration, my_id, *d_ptr, diff);
+   int64_t iteration( get_curr_iteration() );
+   Data process_data( iteration, 
+                      my_id, 
+                      *d_ptr, 
+                      diff);
    delete( p_stat_data );
    p_stat_data = temp;
    store->Set( &process_data ,

@@ -97,20 +97,15 @@ NoOpLoop::PrintData( std::ostream &stream, void *d )
 void
 NoOpLoop::Run( Process &p )
 {  
-   mean_ticks_to_spin = (uint64_t) ( (double) service_time * 
-                                     (double) frequency );
 
-   int64_t it_index( 0 );
-   const auto iterations( GetNumIterations() );
-   for(; it_index < iterations; it_index++ )
-   {  
       /* initialize timers */
+      /* TODO add variable distribution bit here, set outside of loop */
+      mean_ticks_to_spin = (uint64_t) ( (double) service_time * 
+                                        (double) frequency );
       /* readTimeStampCounter will only work on x86 at the moment */
       const uint64_t tick_to_stop_on( 
             mean_ticks_to_spin + readTimeStampCounter() );
-      /* TODO add variable distribution bit here, set outside of loop */
       volatile uint64_t final_tick( 0 );
-      p.SetStatus( it_index, ProcessStatus::RUNNING );
       while( tick_to_stop_on >= (final_tick = readTimeStampCounter() ) )
       {
          __asm__ volatile("\
@@ -119,33 +114,12 @@ NoOpLoop::Run( Process &p )
                               :
                          );
       }
-      p.SetStatus( it_index, ProcessStatus::WAITING );
-      /* wait for everyone to be waiting */
-      while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::WAITING ) )
-      {
-         continue;
-      }
-      /* now that everyone is done, store the data */
+      /* done with data, drop the load to process */
       NoOpLoop::Data d( distribution,
                         service_time,
                         frequency,
                         mean_ticks_to_spin,
                         tick_to_stop_on,
                         final_tick );
-      p.SetData( (void*)&d,
-                 it_index );
-      p.SetStatus( it_index, 
-                   ProcessStatus::CONTINUING );
-      /* wait for store ops to complete */
-      while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::CONTINUING ) )
-      {
-         continue;
-      }
-   }
-   p.SetStatus( it_index, ProcessStatus::DONE );
-   while( ! p.IsEveryoneSetTo( it_index, ProcessStatus::DONE ) )
-   {
-      continue;
-   }
-   /* wait for everyone else to finish then exit */
+      p.SetData( (void*)&d );
 }

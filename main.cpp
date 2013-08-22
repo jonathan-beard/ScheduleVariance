@@ -15,7 +15,7 @@
 #include "heavy_process.tcc"
 #include "load.hpp"
 #include "noop_loop.hpp"
-#include "noop_loop_unrolled.hpp"
+//#include "noop_loop_unrolled.hpp"
 
 
 int
@@ -48,9 +48,8 @@ main( int argc, char **argv )
    /* initialize processes & tests */
    Process *process( nullptr );
 
-   process = new HeavyProcess<NoOpLoopUnrolled, NoOpLoopUnrolled::Data >( cmd );
-
-   assert( process != nullptr );
+   process = 
+      new HeavyProcess<NoOpLoop, NoOpLoop::Data >( cmd );
 
    /* process args */
    cmd.processArgs( argc, argv );

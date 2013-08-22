@@ -33,16 +33,26 @@ public:
    
    virtual void Launch() = 0;
 
-   virtual void SetData( void *ptr, int64_t iteration ) = 0;
+   virtual void SetData( void *ptr ) = 0; 
 
    virtual std::ostream& PrintData( std::ostream &stream ) = 0;
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
+   
+   
+   virtual void SetStatus( int64_t iteration, 
+                           ProcessStatus flag) = 0;
 
-   virtual void SetStatus( int64_t iteration, ProcessStatus flag) = 0;
+   virtual bool IsEveryoneSetTo( int64_t iteration, 
+                                 ProcessStatus flag ) = 0;
 
-   virtual bool IsEveryoneSetTo( int64_t iteration, ProcessStatus flag ) = 0;
+   int64_t  get_iterations();
+   int64_t  get_curr_iteration();
+   void     increment_curr_iteration();
 
 protected:
    CmdArgs &cmd_args;
+private:
+   int64_t  iterations;
+   int64_t  curr_iteration;
 };
 #endif /* END _PROCESS_HPP_ */

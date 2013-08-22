@@ -2,9 +2,13 @@
 
 
 
-Process::Process( CmdArgs &cmd ) : cmd_args( cmd )
+Process::Process( CmdArgs &cmd ) : cmd_args( cmd ),
+                                   iterations( 1 ),
+                                   curr_iteration( 0 )
 {
-   /* nothing really to do here */
+   cmd.addOption( new Option< int64_t >( iterations, 
+                              "-iterations",
+                              "Number of iterations to run load" ) );
 }
 
 Process::~Process()
@@ -13,4 +17,20 @@ Process::~Process()
 }
 
 
+int64_t
+Process::get_iterations()
+{
+   return( iterations );
+}
 
+int64_t
+Process::get_curr_iteration()
+{
+   return( curr_iteration );
+}
+
+void
+Process::increment_curr_iteration()
+{
+   curr_iteration++;
+}

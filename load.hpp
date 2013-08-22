@@ -73,13 +73,6 @@ public:
     * @return  std::ostream&
     */
    virtual std::ostream& PrintData( std::ostream &stream, void *d ) = 0;
-
-   /**
-    * GetNumIterations - returns the number of iterations to run
-    * this load for.  
-    * @return - int64_t
-    */
-   int64_t GetNumIterations();
    
 protected:
    /**
@@ -87,11 +80,6 @@ protected:
     */
    CmdArgs  &cmd_args;
 
-private:
-   /**
-    * # of iterations to run load 
-    */
-   int64_t  iterations;
 };
 
 #endif /* END _LOAD_HPP_ */
