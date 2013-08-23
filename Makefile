@@ -17,8 +17,8 @@ INC = -I./procstat
 
 OPS = 100
 
-CXXFLAGS = -Wall -O2 $(CXXSTD) $(DEBUG) $(INC)
-CFLAGS = -Wall -O2 $(CSTD)  $(DEBUG) $(INC)
+CXXFLAGS = -Wall $(CXXSTD) $(DEBUG) $(INC)
+CFLAGS = -Wall  $(CSTD)  $(DEBUG) $(INC)
 
 
 EXE = svar

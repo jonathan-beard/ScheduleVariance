@@ -144,7 +144,7 @@ virtual ~HeavyProcess()
       SHM::Close( shm_key_sync,
                   process_status,
                   sizeof( status_t ),
-                  spawn * ProcessStatus::N /* #items */,
+                  spawn /* #items */,
                   false /* no zero */
                 );
    }
@@ -308,16 +308,13 @@ virtual void Launch()
       if( is_offspring ){
          /* takes care of unlinking & closing SHM */
          delete( store );
-         shm_unlink( shm_key_sync );
          /* close unmaps memory too */
-#if(0)
          SHM::Close( shm_key_sync,
                      (void*) process_status,
                      sizeof( status_t ),
-                     spawn * ProcessStatus::N /* nitems */,
+                     spawn /* nitems */,
                      false /* don't zero */
                    );
-#endif                   
          exit( EXIT_SUCCESS );
       }
       /* all the child procs are dead, go back and start this again */
