@@ -308,6 +308,7 @@ virtual void Launch()
       if( is_offspring ){
          /* takes care of unlinking & closing SHM */
          delete( store );
+         store = nullptr;
          /* close unmaps memory too */
          SHM::Close( shm_key_sync,
                      (void*) process_status,
@@ -455,7 +456,8 @@ private:
             int64_t n_spawn,
             const char *key) : data( nullptr ),
                                nitems( 0 ),
-                               shm_key( nullptr )
+                               shm_key( nullptr ),
+                               store_parent_id( id )
       {  
          assert( key != nullptr );
          nitems = iterations * n_spawn;
@@ -463,7 +465,7 @@ private:
          this->iterations = iterations;
          shm_key = strdup( key );
          assert( shm_key != nullptr );
-         switch( id ){
+         switch( store_parent_id ){
             case( parent ):
             {
                /* create shm */
@@ -488,7 +490,9 @@ private:
                      data,
                      sizeof( T ),
                      nitems,
-                     false );
+                     false,
+                     /* unlink if parent */
+                     ( store_parent_id == 0 ? true : false ) );
          free( shm_key );
       }
 
@@ -533,6 +537,7 @@ private:
       size_t            nitems;
       char              *shm_key;
       int64_t           iterations;
+      int64_t           store_parent_id;
    }; /* end struct def */
    
 

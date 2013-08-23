@@ -57,7 +57,8 @@ public:
                          void *ptr,
                          size_t nbytes,
                          size_t nitems,
-                         bool   zero = false );
+                         bool   zero = false ,
+                         bool   unlink = false );
 
 private:
    SHM();

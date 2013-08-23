@@ -166,6 +166,8 @@ SHM::Open( const char *key )
       shm_unlink( key );
       return( NULL );
    }
+   /* close fd */
+   close( fd );
    /* done, return mem */
    return( out );
 }
@@ -175,7 +177,8 @@ SHM::Close( const char *key,
             void *ptr,
             size_t nbytes,
             size_t nitems,
-            bool zero )
+            bool zero,
+            bool unlink )
 {
    const int success( 0 );
    const size_t size( nbytes * nitems );
@@ -188,6 +191,13 @@ SHM::Close( const char *key,
    {
       perror( "Failed to unmap shared memory, attempting to close!!" );
    }
-   errno = success;
-   return( shm_unlink( key ) == success );
+   if( unlink )
+   {
+      errno = success;
+      return( shm_unlink( key ) == success );
+   }
+   else
+   {
+      return( true );
+   }
 }
