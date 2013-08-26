@@ -1,9 +1,9 @@
 /**
- * noop_loop.cpp - 
+ * noop_loop_clock.cpp - 
  * @author: Jonathan Beard
  * @version: Thu Jul 25 17:04:00 2013
  */
-#include "noop_loop.hpp"
+#include "noop_loop_clock.hpp"
 #include "process.hpp"
 
 #include <sys/types.h>
@@ -11,7 +11,7 @@
 
 #include "system_query.h"
 
-const char *NoOpLoop::DistributionString[N] =
+const char *NoOpLoopClock::DistributionString[N] =
    {
       [Deterministic] = "Deterministic",
       [Uniform]       = "Uniform",
@@ -20,11 +20,9 @@ const char *NoOpLoop::DistributionString[N] =
    };
 
 
-NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
+NoOpLoopClock::NoOpLoopClock( CmdArgs &args ) : Load( args ),
                                       service_time( 60 ),
                                       distribution( Deterministic ),
-                                      mean_ticks_to_spin( 0 ),
-                                      frequency( 0 )
 {
    /* add specific command line arguments */
    cmd_args.addOption(
@@ -70,31 +68,30 @@ NoOpLoop::NoOpLoop( CmdArgs &args ) : Load( args ),
             const std::string out( DistributionString[ d ] );
             return( out );
          } ) );
-   frequency = getStatedCPUFrequency();
 }
 
-NoOpLoop::~NoOpLoop()
+NoOpLoopClock::~NoOpLoopClock()
 {
    /* nothing to do */
 }
 
 std::ostream&
-NoOpLoop::PrintHeader( std::ostream &stream )
+NoOpLoopClock::PrintHeader( std::ostream &stream )
 {
-   NoOpLoop::Data::PrintHeader( stream );
+   NoOpLoopClock::Data::PrintHeader( stream );
    return( stream );
 }
 
 std::ostream&
-NoOpLoop::PrintData( std::ostream &stream, void *d )
+NoOpLoopClock::PrintData( std::ostream &stream, void *d )
 {
-   NoOpLoop::Data *d_ptr( reinterpret_cast< NoOpLoop::Data* >( d ) );
-   NoOpLoop::Data::PrintData( stream, *d_ptr );
+   NoOpLoopClock::Data *d_ptr( reinterpret_cast< NoOpLoopClock::Data* >( d ) );
+   NoOpLoopClock::Data::PrintData( stream, *d_ptr );
    return( stream );
 }
 
 void
-NoOpLoop::Run( Process &p )
+NoOpLoopClock::Run( Process &p )
 {  
 
       /* initialize timers */
@@ -114,7 +111,7 @@ NoOpLoop::Run( Process &p )
                          );
       }
       /* done with data, drop the load to process */
-      NoOpLoop::Data d( distribution,
+      NoOpLoopClock::Data d( distribution,
                         service_time,
                         frequency,
                         mean_ticks_to_spin,
