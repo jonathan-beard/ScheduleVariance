@@ -50,7 +50,7 @@ main( int argc, char **argv )
    Process *process( nullptr );
 
    process = 
-      new HeavyProcess<NoOpLoopClock, NoOpLoopClock::Data >( cmd );
+      new HeavyProcess<NoOpLoop, NoOpLoop::Data >( cmd );
 
    /* process args */
    cmd.processArgs( argc, argv );

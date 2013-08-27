@@ -8,7 +8,8 @@ DARWIN =
 endif
 
 
-DEBUG = -g -O0
+DEBUG = -Wall -g -O0
+RELEASE = -O2
 CXXSTD = -std=c++11 $(DARWIN)
 CSTD = -std=c99
 
@@ -29,8 +30,8 @@ LIBS = -lrt -lprocstat
 
 CPPOBJ = main command_arguments command_option_base process \
 			load shm \
-         noop_loop_clock
-#         noop_loop \
+         noop_loop
+         #noop_loop_clock
          #noop_loop_unrolled 
 
 COBJ	= system_query getrandom

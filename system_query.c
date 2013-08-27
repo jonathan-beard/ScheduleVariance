@@ -186,7 +186,7 @@ inline size_t getCacheSize(const uint8_t level){
 
 inline uint64_t readTimeStampCounter()
 {
-   uint64_t cycles( 0 );
+   uint64_t cycles = 0;
 #if __x86_64
    uint64_t highBits = 0x0, lowBits = 0x0;
    __asm__ volatile("\

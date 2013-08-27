@@ -16,6 +16,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <sys/types.h>
+#include <sched.h>
+#include <sys/wait.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -259,7 +261,6 @@ virtual void Launch()
                                         spawn,
                                         shm_key_data );
                assert( store != nullptr );   
-               goto END;
             }
             break;
             case( -1 /* FAILURE, THIS IS PARENT */ ):
@@ -292,7 +293,6 @@ virtual void Launch()
             }
          }
       }
-      END:;
       delete( p_stat_data );
       p_stat_data = get_context_swaps_for_process( NULL );
       SetStatus( 0                    /* iteration */, 
@@ -318,7 +318,8 @@ virtual void Launch()
                    );
          exit( EXIT_SUCCESS );
       }
-      /* all the child procs are dead, go back and start this again */
+      delete( list );
+      list = nullptr;
    }
 }
 
