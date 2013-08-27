@@ -28,7 +28,10 @@ LDFLAGS = -L./procstat -L.
 LIBS = -lrt -lprocstat
 
 CPPOBJ = main command_arguments command_option_base process \
-			load noop_loop shm #noop_loop_unrolled
+			load shm \
+         noop_loop_clock
+#         noop_loop \
+         #noop_loop_unrolled 
 
 COBJ	= system_query getrandom
 

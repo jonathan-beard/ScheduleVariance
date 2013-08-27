@@ -7,7 +7,7 @@
 #define _NOOP_LOOP_CLOCK_HPP_  1
 
 #include "load.hpp"
-
+#include <time.h>
 class Process;
 
 class NoOpLoopClock : public Load {
@@ -103,8 +103,10 @@ public:
 #undef LOAD_LENGTH
 
 private:
-   double         service_time;
-   Distribution   distribution;
+   double          service_time;
+   Distribution    distribution;
+   double          resolution;
+   struct timespec loadtime;
 }; 
 
 #endif /* END _NOOP_LOOP_HPP_ */

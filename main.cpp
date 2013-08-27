@@ -15,6 +15,7 @@
 #include "heavy_process.tcc"
 #include "load.hpp"
 #include "noop_loop.hpp"
+#include "noop_loop_clock.hpp"
 //#include "noop_loop_unrolled.hpp"
 
 
@@ -49,7 +50,7 @@ main( int argc, char **argv )
    Process *process( nullptr );
 
    process = 
-      new HeavyProcess<NoOpLoop, NoOpLoop::Data >( cmd );
+      new HeavyProcess<NoOpLoopClock, NoOpLoopClock::Data >( cmd );
 
    /* process args */
    cmd.processArgs( argc, argv );
