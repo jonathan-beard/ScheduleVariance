@@ -5,6 +5,7 @@
  */
 #include "noop_loop.hpp"
 #include "process.hpp"
+#include "gatekeeper.hpp"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -94,17 +95,19 @@ NoOpLoop::PrintData( std::ostream &stream, void *d )
 }
 
 void
-NoOpLoop::Run( Process &p )
+NoOpLoop::Run( Process &p , GateKeeper &g )
 {  
-
-      /* initialize timers */
-      /* TODO add variable distribution bit here, set outside of loop */
+   for(; 
+      p.get_curr_iteration() < p.get_iterations(); 
+      p.increment_curr_iteration() )
+   {
       mean_ticks_to_spin = (uint64_t) ( (double) service_time * 
                                         (double) frequency );
       /* readTimeStampCounter will only work on x86 at the moment */
       const uint64_t tick_to_stop_on( 
             mean_ticks_to_spin + readTimeStampCounter() );
       volatile uint64_t final_tick( 0 );
+      g.WaitForGate( "Running" );
       while( tick_to_stop_on >= (final_tick = readTimeStampCounter() ) )
       {
          __asm__ volatile("\
@@ -113,6 +116,7 @@ NoOpLoop::Run( Process &p )
                               :
                          );
       }
+      g.WaitForGate( "Storing" );
       /* done with data, drop the load to process */
       NoOpLoop::Data d( distribution,
                         service_time,
@@ -121,4 +125,9 @@ NoOpLoop::Run( Process &p )
                         tick_to_stop_on,
                         final_tick );
       p.SetData( (void*)&d );
+      g.WaitForGate( "ReadyToStart" );
+      g.ResetGate( "Running" );
+      g.ResetGate( "Storing" );
+      g.ResetGate( "ReadyToStart" );
+   }
 }

@@ -23,12 +23,10 @@
 #include <fcntl.h>
 
 #include "procstat.h"
-#include "shm.hpp"
-
-
-#define SHM_KEY_LENGTH 100
-
+#include "gatekeeper.hpp"
+#include "procwait.hpp"
 #include "process.hpp"
+#include "shm.hpp"
 
 class CmdArgs;
 
@@ -44,7 +42,7 @@ struct Data : public D {
          D            &data,
          ProcStatusData &d) : it( iteration ),
                               p_id( id ),
-                              d( data ) /* assume D has a copy constructor */
+                              d( data )
    {
       proc_stat_data.voluntary_context_swaps = 
          d.voluntary_context_swaps;
@@ -66,7 +64,6 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                is_offspring( false ),
                                list( nullptr ),
                                the_load( cmd ),
-                               process_status( nullptr ),
                                store( nullptr ),
                                my_id( 0 ),
                                p_stat_data( nullptr )
@@ -85,21 +82,21 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
    cmd_args.addOption(
          new Option< int64_t >( schedule,
                                 "-sched",
-                         std::string("Schedule, should be one of: SCHED_OTHER,")+
-                         std::string("SCHED_FIFO,SCHED_RR"),
+                 std::string("Schedule, should be one of: SCHED_OTHER,")+
+                 std::string("SCHED_FIFO,SCHED_RR"),
                                 [&](const char *val, bool &succ)
                                 {
                                     const std::string str( val );
                                     succ = true;
-                                    if( str.compare( "SCHED_OTHER" ) == 0 )
+                               if( str.compare( "SCHED_OTHER" ) == 0 )
                                     {
                                        return( SCHED_OTHER );
                                     }
-                                    else if( str.compare( "SCHED_FIFO" ) == 0 )
+                               else if( str.compare( "SCHED_FIFO" ) == 0 )
                                     {
                                        return( SCHED_FIFO );
                                     }
-                                    else if( str.compare( "SCHED_RR" ) == 0 )
+                               else if( str.compare( "SCHED_RR" ) == 0 )
                                     {
                                        return( SCHED_RR );
                                     } /* else */
@@ -141,16 +138,6 @@ virtual ~HeavyProcess()
 {
    if( list != nullptr ) delete( list );
    list = nullptr;
-   if( process_status != nullptr )
-   {
-      SHM::Close( shm_key_sync,
-                  process_status,
-                  sizeof( status_t ),
-                  spawn /* #items */,
-                  false /* no zero */
-                );
-   }
-   process_status = nullptr;
    if( store != nullptr )
    {
       delete( store );
@@ -162,25 +149,22 @@ virtual ~HeavyProcess()
 virtual void Launch()
 {
    /* generate our shared SHM keys */
-   char *temp_data( SHM::GenKey() );
-   char *temp_sync( SHM::GenKey() );
-   strncpy( shm_key_data, temp_data, SHM_KEY_LENGTH );
-   strncpy( shm_key_sync,  temp_sync, SHM_KEY_LENGTH );
- 
-   free( temp_data );
-   free( temp_sync );
-  
-   /* open the process_status shm */
-   process_status = (status_t*)
-                    SHM::Init( shm_key_sync,
-                               sizeof( int64_t ),
-                               1 /* only ready at the moment */ );
+   SHM::GenKey( shm_key_data , shm_key_length );
+
+   /* make a proc_wait object ptr */
+   ProcWait *proc_wait = new ProcWait( spawn );
+
+   /* get a gatekeeper object */
+   GateKeeper gate_keeper( spawn );
    
-   assert( process_status != nullptr );
-   
+   gate_keeper.RegisterGate( "AllReady" );
+   gate_keeper.RegisterGate( "Running" );
+   gate_keeper.RegisterGate( "Storing" );
+   gate_keeper.RegisterGate( "ReadyToStart" );
+   gate_keeper.RegisterGate( "Done" );
+
    /* set the parent's store object */
    assert( store == nullptr );
-
    store = new (std::nothrow ) Store<Data>( 
                             get_iterations(),
                             my_id /* should be parent in this case */,
@@ -233,93 +217,83 @@ virtual void Launch()
       perror( "Failed to set processor affinity" );
       exit( EXIT_FAILURE );
    }
-   /* start iterations loop here */
-   for(; get_curr_iteration() < get_iterations(); 
-                                             increment_curr_iteration() )
+   pid_t child( 0 ); 
+   for( int64_t j( 1 ); j < spawn; j++ )
    {
-      pid_t child( 0 ); 
-      for( int64_t j( 1 ); j < spawn; j++ )
+      child = fork();
+      switch( child )
       {
-         child = fork();
-         switch( child )
+         case( 0 /* CHILD */ ):
+         {  
+            /* tell yourself you're a child */
+            is_offspring = true;
+           
+            gate_keeper.HandleFork();
+            proc_wait = nullptr;
+            my_id = j; 
+            /* open store */
+            store = nullptr;
+            store = new (std::nothrow )Store<Data>( 
+                                     get_iterations(), 
+                                     my_id,
+                                     spawn,
+                                     shm_key_data );
+            assert( store != nullptr );   
+            goto END;
+         }
+         break;
+         case( -1 /* FAILURE, THIS IS PARENT */ ):
          {
-            case( 0 /* CHILD */ ):
-            {  
-               /* tell yourself you're a child */
-               is_offspring = true;
-               /* open SHM */
-               process_status = nullptr;
-               process_status = ( status_t* ) SHM::Open( shm_key_sync );
-               assert( process_status != nullptr );
-               
-               my_id = j;
-               /* open store */
-               store = nullptr;
-               store = new (std::nothrow )Store<Data>( 
-                                        get_iterations(), 
-                                        my_id,
-                                        spawn,
-                                        shm_key_data );
-               assert( store != nullptr );   
-            }
-            break;
-            case( -1 /* FAILURE, THIS IS PARENT */ ):
+            std::stringstream err;
+            for( pid_t id : *list )
             {
-               std::stringstream err;
-               for( pid_t id : *list )
+               if( kill( id, SIGQUIT ) != success )
                {
-                  if( kill( id, SIGQUIT ) != success )
-                  {
-                     err << "Failed to kill pid ( " << id << " )\n";
-                  }
+                  err << "Failed to kill pid ( " << id << " )\n";
                }
-               const std::string err_str( err.str() );
-               if( err_str.length() > 0 )
-               {
-                  std::cerr << err_str << "\n";
-                  
-               }
-               exit( EXIT_FAILURE );
             }
-            break;
-            default: /* this is the PARENT */
+            const std::string err_str( err.str() );
+            if( err_str.length() > 0 )
             {
-               if( list == nullptr )
-               {
-                  list = new std::vector< pid_t >();
-               }
-               list->push_back( child );
-               continue;
+               std::cerr << err_str << "\n";
             }
+            exit( EXIT_FAILURE );
+         }
+         break;
+         default: /* this is the PARENT */
+         {
+            if( list == nullptr )
+            {
+               list = new std::vector< pid_t >();
+            }
+            list->push_back( child );
+            proc_wait->AddProcess( child );
+            continue;
          }
       }
-      delete( p_stat_data );
-      p_stat_data = get_context_swaps_for_process( NULL );
-      SetStatus( 0                    /* iteration */, 
-                 ProcessStatus::READY /* flag */ );
-      while( ! IsEveryoneSetTo( 0 /* iteration */, 
-                                ProcessStatus::READY /* flag */ ) )
-      {
-         continue;
-      }
-      /* lets do something, the load will control the process */
-      the_load.Run( *this );
-      /* control is now back to here, shutdown shm */
-      if( is_offspring ){
-         /* takes care of unlinking & closing SHM */
-         delete( store );
-         store = nullptr;
-         /* close unmaps memory too */
-         SHM::Close( shm_key_sync,
-                     (void*) process_status,
-                     sizeof( status_t ),
-                     spawn /* nitems */,
-                     false /* don't zero */
-                   );
-         exit( EXIT_SUCCESS );
-      }
+   }
+END:;      
+   delete( p_stat_data );
+   p_stat_data = get_context_swaps_for_process( NULL );
+   gate_keeper.WaitForGate( "AllReady" );
+
+   /* lets do something, the load will control the process */
+   the_load.Run( *this, gate_keeper );
+   
+   gate_keeper.WaitForGate( "Done" );
+   
+   /* control is now back to here, shutdown shm */
+   if( is_offspring ){
+      /* takes care of unlinking & closing SHM */
+      delete( store );
+      store = nullptr;
+      exit( EXIT_SUCCESS );
+   }else{
+      proc_wait->WaitForChildren();
       delete( list );
       list = nullptr;
+      delete( proc_wait );
+      proc_wait = nullptr;
    }
 }
 
@@ -330,6 +304,7 @@ PrintData( std::ostream &stream )
    for( int64_t index( 0 ); index < length; index++ )
    {
       /* a little hacky I admit, but it works */
+      stream << timestamp << ",";
       stream << store->data[index].it << "," << 
       store->data[index].p_id << ",";
       stream << 
@@ -346,7 +321,8 @@ PrintData( std::ostream &stream )
 virtual std::ostream& 
 PrintHeader( std::ostream &stream )
 {
-   stream << "Iteration" << "," << "ProcessID" << "," 
+   stream << "TimeStamp"<< "," << "Iteration" << 
+      "," << "ProcessID" << "," 
       << "VoluntaryContextSwaps";
    stream << "," << "Non-VoluntaryContextswaps" << ",";
    the_load.PrintHeader( stream );
@@ -381,22 +357,6 @@ SetData( void *ptr )
                iteration );
 }
 
-virtual void 
-SetStatus( int64_t iteration, ProcessStatus flag )
-{
-   /* flag = -1 would be bad for subsequent code */
-   assert( flag >= 0 );
-   SetStatus( my_id, iteration, flag );
-}
-
-virtual bool 
-IsEveryoneSetTo( int64_t iteration, ProcessStatus flag )
-{
-   /* flag = -1 would be bad for subsequent code */
-   assert( flag >= 0 );
-   return( CheckAllForStatus( iteration, flag ) );
-}
-
 protected:
    int64_t spawn;
    int64_t assigned_processor;
@@ -404,53 +364,13 @@ protected:
    bool    is_offspring;
 
 private:
-
-   int64_t* GetStatusIndex( int64_t           id, 
-                            int64_t           iteration, 
-                            ProcessStatus     flag )
-   {
-      const int64_t index( id + ( flag * spawn ) );
-      return( &process_status[index] );
-   }
-
-   bool  CheckAllForStatus( int64_t           iteration,
-                            ProcessStatus     flag )
-   {
-      if( process_status == nullptr )
-      {
-         return( false );
-      }
-
-      for( int64_t index( 0 ); index < spawn; index++ )
-      {
-         auto *val( GetStatusIndex( index, 
-                                    iteration, 
-                                    flag ) );
-         if( *val != iteration ) return( false );
-      }
-      return( true );
-   }
-
-   void SetStatus( int64_t           id,
-                   int64_t           iteration,
-                   ProcessStatus     flag )
-   {
-      auto *val( GetStatusIndex( id, 
-                                 iteration,
-                                 flag ) );
-      *val = iteration;
-   }
-
    /* just remember ptrs are not carried accross fork */
+   static const int shm_key_length = 40;
    std::vector< pid_t > *list; 
    LoadType              the_load;
-   char                  shm_key_sync[ SHM_KEY_LENGTH ];
-   char                  shm_key_data[ SHM_KEY_LENGTH ];
+   char                  shm_key_data[ shm_key_length ];
 
    
-   /* array for each process to keep their status */
-   int64_t              *process_status;
-
    template <class T> struct Store{
       Store(int64_t iterations, 
             int64_t id,
@@ -545,6 +465,7 @@ private:
    Store<Data>          *store;
    int64_t              my_id;
    ProcStatusData       *p_stat_data;
+
 };
 
 #endif /* END _HEAVY_PROCESS_HPP_ */

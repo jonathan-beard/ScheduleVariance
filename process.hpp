@@ -7,23 +7,14 @@
 #define _PROCESS_HPP_  1
 
 #include <ostream>
+#include <time.h>
+
 #include "command_arguments.h"
 #include "command_option_base.hpp"
 #include "command_option_single.tcc"
 #include "command_option_multiple.tcc"
 
 class Load;
-
-/* general status flags, add more if you need them */
-enum ProcessStatus : int8_t {
-                               NOTREADY   = 0,
-                               READY     ,
-                               RUNNING   ,
-                               WAITING   ,
-                               CONTINUING,
-                               DONE      ,
-                               N
-};
 
 class Process {
 public:
@@ -38,19 +29,14 @@ public:
    virtual std::ostream& PrintData( std::ostream &stream ) = 0;
    virtual std::ostream& PrintHeader( std::ostream &stream ) = 0;
    
-   
-   virtual void SetStatus( int64_t iteration, 
-                           ProcessStatus flag) = 0;
-
-   virtual bool IsEveryoneSetTo( int64_t iteration, 
-                                 ProcessStatus flag ) = 0;
-
    int64_t  get_iterations();
    int64_t  get_curr_iteration();
    void     increment_curr_iteration();
 
 protected:
    CmdArgs &cmd_args;
+   const time_t  timestamp;
+
 private:
    int64_t  iterations;
    int64_t  curr_iteration;

@@ -14,7 +14,7 @@
 #include "command_option_multiple.tcc"
 
 class Process;
-
+class GateKeeper;
 
 class Load {
 public:
@@ -51,7 +51,7 @@ public:
     * data storage and synchronization
     * @param   p - Process&
     */
-   virtual void Run( Process &p ) = 0;
+   virtual void Run( Process &p, GateKeeper &g ) = 0;
 
    /**
     * PrintHeader - print a header to this function to the stream.

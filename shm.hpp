@@ -14,10 +14,10 @@ public:
     * GenKey - generate a shared key at the memory 
     * address pointed to by ptr *key with length 
     * length.
-    * @param   ptr - char *
+    * @param   buffer - char *
     * @param   length - size_t
     */
-   static char*    GenKey();
+   static void GenKey(char *buffer, size_t length);
 
    /**
     * Init - initialize SHM segment with file descriptor

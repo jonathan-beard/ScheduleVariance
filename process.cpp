@@ -3,6 +3,7 @@
 
 
 Process::Process( CmdArgs &cmd ) : cmd_args( cmd ),
+                                   timestamp( time( nullptr ) ),
                                    iterations( 1 ),
                                    curr_iteration( 0 )
 {

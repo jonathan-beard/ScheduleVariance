@@ -26,10 +26,10 @@ EXE = svar
 
 
 LDFLAGS = -L./procstat -L.
-LIBS = -lrt -lprocstat
+LIBS = -lrt -lprocstat -lpthread
 
 CPPOBJ = main command_arguments command_option_base process \
-			load shm \
+			load shm gate gatekeeper procwait \
          noop_loop
          #noop_loop_clock
          #noop_loop_unrolled 

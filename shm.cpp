@@ -22,30 +22,28 @@
 #include <iostream>
 #include "getrandom.h"
 
-char*    
-SHM::GenKey()
+void
+SHM::GenKey( char *buffer, size_t length )
 {
-   
+   assert( buffer != nullptr );
    const uint32_t key( getUniformRandom() );
    const size_t buffer_size( 1000 );
-   char buffer[ buffer_size ];
-   memset( buffer, 
+   char gen_buffer[ buffer_size ];
+   memset( gen_buffer, 
            '\0', 
            buffer_size );
 
-   snprintf( buffer, 
+   snprintf( gen_buffer, 
              buffer_size, 
              "%" PRIu32 "", 
              key );
-   const size_t length( strlen( buffer ) );
-   char *out( nullptr );
-   out = (char*) malloc( sizeof( char ) * length + 1 );
-   out[ length ] = '\0';
-   assert( out != nullptr );
-   strncpy( out, 
-            buffer,
-            length );
-   return( out );
+   const size_t cp_length( std::min( strlen( gen_buffer ), length ) );
+   memset( /* input buffer */ buffer, 
+                              '\0', 
+                              length );
+   strncpy( buffer, 
+            gen_buffer,
+            cp_length - 1 /* null term */ );
 }
 
 void*
