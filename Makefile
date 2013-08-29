@@ -16,7 +16,7 @@ CSTD = -std=c99
 
 INC = -I./procstat
 
-OPS = 100
+OPS = 1000
 
 CXXFLAGS = -Wall $(CXXSTD) $(DEBUG) $(INC)
 CFLAGS = -Wall  $(CSTD)  $(DEBUG) $(INC)
@@ -28,11 +28,12 @@ EXE = svar
 LDFLAGS = -L./procstat -L.
 LIBS = -lrt -lprocstat -lpthread
 
+UNROLLED = noop_loop_unrolled
+#NOOP     = noop_loop
+
 CPPOBJ = main command_arguments command_option_base process \
 			load shm gate gatekeeper procwait \
-         noop_loop
-         #noop_loop_clock
-         #noop_loop_unrolled 
+         $(UNROLLED) $(NOOP)
 
 COBJ	= system_query getrandom
 

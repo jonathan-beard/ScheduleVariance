@@ -10,6 +10,7 @@
 #include "load.hpp"
 
 class Process;
+class GateKeeper;
 
 class NoOpLoopUnrolled : public Load
 {
@@ -18,7 +19,7 @@ public:
    
    virtual ~NoOpLoopUnrolled();
 
-   virtual void Run( Process & p );
+   virtual void Run( Process &p, GateKeeper &g );
    
    virtual std::ostream& PrintHeader( std::ostream &stream );
    virtual std::ostream& PrintData( std::ostream &stream, void *d );
