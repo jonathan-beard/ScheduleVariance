@@ -8,7 +8,7 @@ use warnings;
 ######################
 my $min_mu = .25;
 my $max_mu = 10;
-my $mu_delta = .25;
+my $mu_delta = .5;
 my $min_processes = 1;
 my $max_processes = 20;
 my $iterations = 1000;
@@ -61,6 +61,8 @@ $output .= "\n";
 
 ################
 
+open (OUTFILE, ">/myscratch/output.csv");
+
 ## GEN OUTPUT ##
 for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
 {  
@@ -74,11 +76,11 @@ for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
       foreach my $line (@lines ){
         $output .= $line.",".$otherprocs.",".$procs."\n"; 
       }
+      print OUTFILE $output;
+      $output = "";
    }
 }
 
-open (OUTFILE, ">./output.csv");
-print OUTFILE $output;
 close(OUTFILE);
 
 exit( 0 );

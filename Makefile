@@ -28,8 +28,8 @@ EXE = svar
 LDFLAGS = -L./procstat -L.
 LIBS = -lrt -lprocstat -lpthread
 
-UNROLLED = noop_loop_unrolled
-#NOOP     = noop_loop
+#UNROLLED = noop_loop_unrolled
+NOOP     = noop_loop
 
 CPPOBJ = main command_arguments command_option_base process \
 			load shm gate gatekeeper procwait \
