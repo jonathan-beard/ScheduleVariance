@@ -18,12 +18,8 @@ NoOpLoopUnrolled::~NoOpLoopUnrolled()
 }
 
 void 
-NoOpLoopUnrolled::Run( Process &p, GateKeeper &g )
+NoOpLoopUnrolled::RunLoad( Process &p, GateKeeper &g, int64_t i )
 {
-   for(;
-         p.get_curr_iteration() < p.get_iterations();
-         p.increment_curr_iteration() )
-   {
       g.WaitForGate( "Running" );
       /* A bit hacky but it'll work */
 #include "noop_loop_unrolled_load.cpp"         
@@ -43,7 +39,6 @@ NoOpLoopUnrolled::Run( Process &p, GateKeeper &g )
       g.ResetGate( "Running" );
       g.ResetGate( "Storing" );
       g.ResetGate( "ReadyToStart" );
-   }
 }
 
 

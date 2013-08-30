@@ -8,6 +8,7 @@
 
 
 #include <ostream>
+#include <cstdint>
 #include "command_arguments.h"
 #include "command_option_base.hpp"
 #include "command_option_single.tcc"
@@ -46,12 +47,7 @@ public:
     */
    virtual ~Load();
 
-   /**
-    * Run - Run the load, take in a process reference for
-    * data storage and synchronization
-    * @param   p - Process&
-    */
-   virtual void Run( Process &p, GateKeeper &g ) = 0;
+   void  Run( Process &p, GateKeeper &g );
 
    /**
     * PrintHeader - print a header to this function to the stream.
@@ -75,6 +71,17 @@ public:
    virtual std::ostream& PrintData( std::ostream &stream, void *d ) = 0;
    
 protected:
+   /**
+    * RunLoad - Run the load, take in a process reference for
+    * data storage and synchronization.  Will be called the 
+    * specified number of iterations.
+    *
+    * @param   p - Process&
+    * @param   g - GateKeeper Object
+    * @param   i - current iteration
+    */
+   virtual void RunLoad( Process &p, GateKeeper &g, int64_t i) = 0;
+
    /**
     * local reference to cmd args 
     */

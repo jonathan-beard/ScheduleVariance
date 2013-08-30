@@ -18,15 +18,14 @@ INC = -I./procstat
 
 OPS = 1000
 
+STATIC = -static -static-libstdc++ -static-libgcc
 CXXFLAGS = -Wall $(CXXSTD) $(DEBUG) $(INC)
-CFLAGS = -Wall  $(CSTD)  $(DEBUG) $(INC)
-
-
+CFLAGS = -Wall $(CSTD) $(DEBUG) $(INC)
 EXE = svar
 
 
+LIBS = $(STATIC) -lrt -lprocstat -lpthread 
 LDFLAGS = -L./procstat -L.
-LIBS = -lrt -lprocstat -lpthread
 
 #UNROLLED = noop_loop_unrolled
 NOOP     = noop_loop

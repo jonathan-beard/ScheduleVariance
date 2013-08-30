@@ -19,7 +19,6 @@ public:
    
    virtual ~NoOpLoopUnrolled();
 
-   virtual void Run( Process &p, GateKeeper &g );
    
    virtual std::ostream& PrintHeader( std::ostream &stream );
    virtual std::ostream& PrintData( std::ostream &stream, void *d );
@@ -77,6 +76,10 @@ public:
       uint64_t diff;
    };
 #undef LOAD_LENGTH
+
+protected:
+   virtual void RunLoad( Process &p, GateKeeper &g ,int64_t i);
+
 private:
    uint64_t frequency;
 };

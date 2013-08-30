@@ -95,12 +95,8 @@ NoOpLoop::PrintData( std::ostream &stream, void *d )
 }
 
 void
-NoOpLoop::Run( Process &p , GateKeeper &g )
+NoOpLoop::RunLoad( Process &p , GateKeeper &g, int64_t i)
 {  
-   for(; 
-      p.get_curr_iteration() < p.get_iterations(); 
-      p.increment_curr_iteration() )
-   {
       mean_ticks_to_spin = (uint64_t) ( (double) service_time * 
                                         (double) frequency );
       /* readTimeStampCounter will only work on x86 at the moment */
@@ -129,5 +125,4 @@ NoOpLoop::Run( Process &p , GateKeeper &g )
       g.ResetGate( "Running" );
       g.ResetGate( "Storing" );
       g.ResetGate( "ReadyToStart" );
-   }
 }

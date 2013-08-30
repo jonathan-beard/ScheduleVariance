@@ -17,7 +17,6 @@ public:
    
    virtual ~NoOpLoop();
 
-   virtual void Run( Process &p, GateKeeper &g);
 
    virtual std::ostream& PrintHeader( std::ostream &stream );
 
@@ -108,6 +107,9 @@ public:
       }
    };
 #undef LOAD_LENGTH
+
+protected:
+   virtual void RunLoad( Process &p, GateKeeper &g, int64_t i);
 
 private:
    double         service_time;
