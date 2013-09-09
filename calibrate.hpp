@@ -27,7 +27,7 @@ struct Sample{
 
    sample_index_t index;
    measure_t      measure;
-}
+};
 
 
 #include <vector>
