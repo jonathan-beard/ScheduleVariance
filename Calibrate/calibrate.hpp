@@ -12,6 +12,7 @@
 
 
 #include <vector>
+#include <functional>
 #include "sample.hpp"
 
 class Calibrate {
@@ -27,9 +28,18 @@ public:
     * Destructor
     */
    ~Calibrate();
+protected:
+   /**
+    * Regress - calls gsl linear regresion function to get 
+    * formula for calulating right number of instructions to
+    * generate
+    */
+   Formula* Regress( std::vector< Sample > &samples );
+
 private:
-    
-   std::vector< Sample > samples;
+   /* a way to register functions via perl script */
+   typedef std::function< Sample (void) > SampleFunction;
+   std::vector< SampleFunction >          samplefunctions;
 }
 
 #endif /* END _CALIBRATE_HPP_ */

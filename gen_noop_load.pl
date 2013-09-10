@@ -2,7 +2,8 @@
 use strict;
 use warnings;
 
-my $num = shift(@ARGV);
+my $num = shift( @ARGV );
+my $seconds = shift( @ARGV );
 my $file = "noop_loop_unrolled_load.cpp";
 
 ##
@@ -11,6 +12,7 @@ my $file = "noop_loop_unrolled_load.cpp";
 # pror to compilation otherwise bad things could happen.
 ##
 open OUTFILE, ">$file" or die "Couldn't open load file!!\n";
+print OUTFILE     "double  expectedSeconds = $seconds\n";
 print OUTFILE     "uint64_t highBitsBefore = 0x0, lowBitsBefore = 0x0;\n";
 print OUTFILE     "uint64_t highBitsAfter  = 0x0, lowBitsAfter  = 0x0;\n";
 print OUTFILE     "uint64_t theNoopCount   = $num;\n";

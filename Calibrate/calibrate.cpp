@@ -3,7 +3,20 @@
  * @author: Jonathan Beard
  * @version: Fri Sep  6 14:51:13 2013
  */
+
+#include <gsl/gsl_fit.h>
+#include <errno.h>
+#define _GNU_SOURCE
+#include <sched.h>
+
+#include <cstdlib>
+#include <cstdint>
+#include <sstream>
+
 #include "calibrate.hpp"
+#include "formula.hpp"
+
+#include "lineardatatwo.tcc"
 
 //STARTCALIBRATEDECL
 extern Sample threethousand();
@@ -29,9 +42,11 @@ extern Sample tenthousand();
 extern Sample fivehundred();
 //ENDCALIBRATEDECL
 
-Calibrate::Calibrate( double seconds )
+Calibrate::Calibrate( double seconds, 
+                      const int argc, 
+                      const char **argv )
 {
-
+   
 //STARTFUNCTIONINSERT
 samplefunctions.push_back( threethousand );
 samplefunctions.push_back( hundred );
@@ -56,8 +71,44 @@ samplefunctions.push_back( tenthousand );
 samplefunctions.push_back( fivehundred );
 //ENDFUNCTIONINSERT
 
-/* set affinity */
+/* check for profile already in existence */
 
+
+
+/* set affinity */
+   const int success( 0 );
+   /* pin processor */
+   /* the cpuset should be inherited by forked processes */
+   cpu_set_t   *cpuset( nullptr );
+   const int8_t processors_to_allocate( 1 );
+   size_t cpu_allocate_size( -1 );
+#if   (__GLIBC_MINOR__ > 9 ) && (__GLIBC__ == 2 )
+   cpuset = CPU_ALLOC( processors_to_allocate );
+   assert( cpuset != nullptr );
+   cpu_allocate_size =  CPU_ALLOC_SIZE( processors_to_allocate );
+   CPU_ZERO_S( cpu_allocate_size, cpuset );
+#else
+   cpu_allocate_size = sizeof( cpu_set_t );
+   cpuset = (cpu_set_t*) malloc( cpu_allocate_size );
+   assert( cpuset != nullptr );
+   CPU_ZERO( cpuset );
+#endif
+   /* TODO: unhard-code this */
+   CPU_SET( 1,
+            cpuset );
+   auto setaffinity_ret_val( success );
+   errno = success;
+   setaffinity_ret_val = sched_setaffinity( 0 /* self */,
+                                            cpu_allocate_size,
+                                            cpuset );
+   if( setaffinity_ret_val != success )
+   {
+      perror( "Failed to set processor affinity" );
+      exit( EXIT_FAILURE );
+   }
+
+/* collect samples */
+std::vector< Sample > samples;
 for( SampleFunction &sf : samplefunctions )
 {
    for( int i( 0 ); i < 1000; i++ )
@@ -67,7 +118,43 @@ for( SampleFunction &sf : samplefunctions )
 }
 
 /* run linear regression */
+Formula *formula( Regress( samples ) );
+assert( formula != nullptr );
+std::vector< double > params;
+params.push_back( seconds );
+/* now we have the number fo params */
+uint32_t  num_instructions = ( uint32_t )ceil( formula->solve( params ) );
 
+std::stringstream cmd_gen;
+cmd_gen << "./gen_noop_load.pl " << num_instructions << " " << seconds;
+/* use system to call perl script */
+if( system( cmd_gen.str().c_str() ) != 0 )
+{
+   std::cerr << "Failed to execute system command to regenerate load!!\n";
+   exit( EXIT_FAILURE );
+}
+/* now we have the new load, execute make */
+std::stringstream cmd_make_clean
+cmd_make_clean << "make clean";
+if( system( cmd_make_clean.str().c_str() ) != 0 )
+{
+   std::cerr << "Failed to execute system command to clean!!\n";
+   exit( EXIT_FAILURE );
+}
+std::stringstream cmd_make_all
+cmd_make_all << "make -j all";
+if( system( cmd_make_all.str().c_str() ) != 0 )
+{
+   std::cerr << "Failed to execute system command to build all!!\n";
+   exit( EXIT_FAILURE );
+}
+/* now we're ready to re-execute */
+errno = 0;
+if( execvp( "./svar", argv ) != 0 )
+{
+   perror( "Failed to exec program!!" );
+   exit( EXIT_FAILURE );
+}
 }
 
 Calibrate::~Calibrate()
@@ -75,4 +162,36 @@ Calibrate::~Calibrate()
 
 }
 
+
+/**
+ * Regress - runs gsl linear regression routine on data collected, 
+ * writes the appropriate formula to a profile file which is saved
+ * for future use so this process doesn't have to be done over and 
+ * over on a new machine.
+ */
+Formula*
+Calibrate::Regress( std::vector< Sample > &samples )
+{
+   Data< double > data( samples );
+   const size_t stride( data.get_stride() );
+   double c0( 0.0 );
+   double c1( 0.0 );
+   double cov00( 0.0 );
+   double cov01( 0.0 );
+   double cov11( 0.0 );
+   double sumsq( 0.0 );
+   const int ret_val( gsl_fit_linear( data.get_x(), stride,
+                                      data.get_y(), stride,
+                                      data.get_size(),
+                                      &c0, &c1,
+                                      &cov00, &cov01, &cov11,
+                                      &sumsq ) );
+   if( ret_val != 0 )
+   {
+      std::cerr << "Error calling linear regress function!!\n";
+      exit( EXIT_FAILURE );
+   }
+   Forumula *output = new LinearFormula( c0, c1, cov00, cov01, cov11, sumsq );
+   return( output );
+}
 
