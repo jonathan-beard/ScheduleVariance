@@ -12,9 +12,7 @@
 
 
 #include <vector>
-#include <functional>
 #include "sample.hpp"
-
 
 class Calibrate {
 public:
@@ -29,12 +27,9 @@ public:
     * Destructor
     */
    ~Calibrate();
-
 private:
-   std::vector< Sample >                    samples;
-
-   typedef std::function< Sample ( void ) > SampleFunction;
-   std::vector< SampleFunction >            samplefunctions;
+    
+   std::vector< Sample > samples;
 }
 
 #endif /* END _CALIBRATE_HPP_ */
