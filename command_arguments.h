@@ -70,11 +70,18 @@ class CmdArgs{
        * command line 
        */
       void processArgs(int argc, char **argv);
+   
+      char** getOriginalArguments();
+      int    getOriginalArgumentCount();
+
    private:
       std::vector< OptionBase * > options;
       std::string                 name;
       std::ostream                &userstream;
       std::ostream                &errorstream;
+
+      char                        **argv;
+      int                         argc;
 };
 
  #endif /* END __CMDARGS_H__ */

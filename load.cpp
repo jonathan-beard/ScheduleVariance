@@ -22,3 +22,9 @@ Load::Run( Process &p, GateKeeper &g )
       RunLoad( p, g, it );
    }
 }
+
+bool
+Load::AllSet()
+{
+   return( true );
+}

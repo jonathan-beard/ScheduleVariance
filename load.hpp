@@ -50,6 +50,19 @@ public:
    void  Run( Process &p, GateKeeper &g );
 
    /**
+    * AllSet - to be overrided by sub-classes if needed, called
+    * by the process object to ensure that the load is in fact 
+    * all set to go and that the current settings are sane.  The
+    * default version here simply returns true so if no custom
+    * behavior is needed, feel free not to implement it.  This 
+    * function will be called before the processes are spawned
+    * and executed.
+    *
+    * @return  bool - true if all set and ready to run load.
+    */
+   virtual bool  AllSet();
+
+   /**
     * PrintHeader - print a header to this function to the stream.
     * @param   stream - std::ostream&
     * @return  std::ostream&
@@ -86,7 +99,6 @@ protected:
     * local reference to cmd args 
     */
    CmdArgs  &cmd_args;
-
 };
 
 #endif /* END _LOAD_HPP_ */

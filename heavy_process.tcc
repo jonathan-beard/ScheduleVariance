@@ -146,8 +146,16 @@ virtual ~HeavyProcess()
 }
 
 
-virtual void Launch()
+virtual void Launch( char **argv )
 {
+   if( ! the_load.AllSet() )
+   {
+      /* at this point the load should have printed 
+       * a snarky message describing the exact error
+       */
+      std::cerr << "Exiting!!\n";
+      exit( EXIT_FAILURE );
+   }
    /* generate our shared SHM keys */
    SHM::GenKey( shm_key_data , shm_key_length );
 

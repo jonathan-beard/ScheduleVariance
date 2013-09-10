@@ -14,6 +14,7 @@
 #include <vector>
 #include <functional>
 #include "sample.hpp"
+#include "formula.hpp"
 
 class Calibrate {
 public:
@@ -23,7 +24,7 @@ public:
     * calling this then we have the incorrect number of noops
     * in our compiled unrolled loop and we need to restart
     */
-   Calibrate( double seconds ); 
+   Calibrate( double seconds, char **argv ); 
    /**
     * Destructor
     */
@@ -40,6 +41,6 @@ private:
    /* a way to register functions via perl script */
    typedef std::function< Sample (void) > SampleFunction;
    std::vector< SampleFunction >          samplefunctions;
-}
+};
 
 #endif /* END _CALIBRATE_HPP_ */

@@ -2,14 +2,22 @@
 #include <unistd.h>
 
 #include "system_query.h"
-
+#include "calibrate.hpp"
 #include "process.hpp"
 #include "gatekeeper.hpp"
 #include "noop_loop_unrolled.hpp"
 
-NoOpLoopUnrolled::NoOpLoopUnrolled( CmdArgs &args ) : Load( args )
+NoOpLoopUnrolled::NoOpLoopUnrolled( CmdArgs &args ) : Load( args ),
+                                                      seconds( 0.0 ),
+                                                      service_time( 1.0 )
 {
    frequency = getStatedCPUFrequency();
+#include "noop_loop_unrolled_load_seconds.hpp"
+   /* defined in above include */
+   seconds = expectedSeconds;
+   cmd_args.addOption( new Option< double >( service_time,
+                                             "-mu",
+                                             "Service rate for load" ) );
 }
 
 NoOpLoopUnrolled::~NoOpLoopUnrolled()
@@ -41,6 +49,20 @@ NoOpLoopUnrolled::RunLoad( Process &p, GateKeeper &g, int64_t i )
       g.ResetGate( "ReadyToStart" );
 }
 
+bool 
+NoOpLoopUnrolled::AllSet()
+{
+   /* check to see if we need calibration */
+   if( seconds != service_time )
+   {
+      /* need to call calibrate here */
+      Calibrate( service_time, cmd_args.getOriginalArguments() );
+      /* won't return from this one, however
+       * some compilers require a return here */
+      return( false );
+   }
+   return( true );
+}
 
 std::ostream&
 NoOpLoopUnrolled::PrintHeader( std::ostream &stream )

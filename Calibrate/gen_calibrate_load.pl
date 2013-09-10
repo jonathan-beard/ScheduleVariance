@@ -70,7 +70,6 @@ sub gen( $ )
       print OUTFILE     "{\n";
       print OUTFILE     "  uint64_t highBitsBefore = 0x0, lowBitsBefore = 0x0;\n";
       print OUTFILE     "  uint64_t highBitsAfter  = 0x0, lowBitsAfter  = 0x0;\n";
-      print OUTFILE     "  uint64_t theNoopCount   = $num;\n";
       print OUTFILE     "  __asm__ volatile(\"\\\n";
       print OUTFILE     "                   lfence                           \\n\\\n";
       print OUTFILE     "                   rdtsc                            \\n\\\n";
@@ -125,10 +124,10 @@ sub clean( $$ )
             my $cmd = "$pwd/$filename";
             `rm -rf $cmd`;
          }
+         my $cmd = "$pwd/Makefile";
+         `rm -rf $cmd`;
+         exit( 0 );
       }
-      my $cmd = "$pwd/Makefile";
-      `rm -rf $cmd`;
-      exit( 0 );
    }
    #get here then no cleaning to do
 }

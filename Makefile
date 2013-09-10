@@ -14,25 +14,29 @@ CXXSTD = -std=c++11 $(DARWIN)
 CSTD = -std=c99
 
 
-INC = -I./procstat
+DIRINCLUDES = Calibrate
 
-OPS = 1000
+DIRINC = $(addprefix -I./, $(DIRINCLUDES) )
 
-STATIC = -static -static-libstdc++ -static-libgcc
+INC = -I./ -I./procstat $(DIRINC)
+
+include $(addsuffix /Makefile, $(addprefix ./, $(DIRINCLUDES)) )
+
+#STATIC = -static -static-libstdc++ -static-libgcc
 CXXFLAGS = -Wall $(CXXSTD) $(DEBUG) $(INC)
 CFLAGS = -Wall $(CSTD) $(DEBUG) $(INC)
 EXE = svar
 
 
-LIBS = $(STATIC) -lrt -lprocstat -lpthread 
+LIBS = $(STATIC) -lrt -lprocstat -lpthread -lm -lgsl -lgslcblas
 LDFLAGS = -L./procstat -L.
 
-#UNROLLED = noop_loop_unrolled
+UNROLLED = noop_loop_unrolled
 NOOP     = noop_loop
 
 CPPOBJ = main command_arguments command_option_base process \
 			load shm gate gatekeeper procwait \
-         $(UNROLLED) $(NOOP)
+         $(UNROLLED) $(NOOP) $(CALIBRATECPPCODE)
 
 COBJ	= system_query getrandom
 
@@ -46,12 +50,11 @@ CLEANLIST =  $(OBJS) $(EXE)\
 all:  $(EXE)
 
 $(EXE): $(FILES)
-	./gen_noop_load.pl $(OPS)
 	$(MAKE) $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(EXE) $(OBJS) $(LIBS)
 
 
 
 .PHONY: clean
-clean: 
+clean:
 	rm -rf $(CLEANLIST)

@@ -6,16 +6,21 @@
 
 #include <gsl/gsl_fit.h>
 #include <errno.h>
-#define _GNU_SOURCE
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif  
 #include <sched.h>
+
+#include <unistd.h>
 
 #include <cstdlib>
 #include <cstdint>
 #include <sstream>
+#include <cassert>
 
 #include "calibrate.hpp"
 #include "formula.hpp"
-
+#include "linearformula.hpp"
 #include "lineardatatwo.tcc"
 
 //STARTCALIBRATEDECL
@@ -43,8 +48,7 @@ extern Sample fivehundred();
 //ENDCALIBRATEDECL
 
 Calibrate::Calibrate( double seconds, 
-                      const int argc, 
-                      const char **argv )
+                      char **argv )
 {
    
 //STARTFUNCTIONINSERT
@@ -134,14 +138,14 @@ if( system( cmd_gen.str().c_str() ) != 0 )
    exit( EXIT_FAILURE );
 }
 /* now we have the new load, execute make */
-std::stringstream cmd_make_clean
+std::stringstream cmd_make_clean;
 cmd_make_clean << "make clean";
 if( system( cmd_make_clean.str().c_str() ) != 0 )
 {
    std::cerr << "Failed to execute system command to clean!!\n";
    exit( EXIT_FAILURE );
 }
-std::stringstream cmd_make_all
+std::stringstream cmd_make_all;
 cmd_make_all << "make -j all";
 if( system( cmd_make_all.str().c_str() ) != 0 )
 {
@@ -191,7 +195,7 @@ Calibrate::Regress( std::vector< Sample > &samples )
       std::cerr << "Error calling linear regress function!!\n";
       exit( EXIT_FAILURE );
    }
-   Forumula *output = new LinearFormula( c0, c1, cov00, cov01, cov11, sumsq );
+   Formula *output = new LinearFormula( c0, c1, cov00, cov01, cov11, sumsq );
    return( output );
 }
 

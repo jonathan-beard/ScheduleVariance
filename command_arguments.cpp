@@ -64,6 +64,11 @@ CmdArgs::addOption(OptionBase *option){
 }
 
 void CmdArgs::processArgs(int argc, char **argv){
+   /* store for later just in case */
+   this->argc = argc;
+   this->argv = argv;
+
+   /* now on to the processing */
    std::queue< std::string > ignored_options;
    for(int i = 1 ; i < argc; i++)
    {
@@ -96,4 +101,16 @@ void CmdArgs::processArgs(int argc, char **argv){
       ignored_options.pop();
       errorstream << option << std::endl;
    }
+}
+
+char**   
+CmdArgs::getOriginalArguments()
+{
+   return( argv );
+}
+
+int
+CmdArgs::getOriginalArgumentCount()
+{
+   return( argc );
 }

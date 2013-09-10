@@ -77,11 +77,15 @@ public:
    };
 #undef LOAD_LENGTH
 
+   virtual bool AllSet();
+
 protected:
    virtual void RunLoad( Process &p, GateKeeper &g ,int64_t i);
 
 private:
    uint64_t frequency;
+   double   seconds;
+   double   service_time;
 };
 
 #endif /* END _NOOP_LOOP_UNROLLED_HPP_ */

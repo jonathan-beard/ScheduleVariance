@@ -1,11 +1,12 @@
 uint64_t highBitsBefore = 0x0, lowBitsBefore = 0x0;
 uint64_t highBitsAfter  = 0x0, lowBitsAfter  = 0x0;
-uint64_t theNoopCount   = clean;
+uint64_t theNoopCount   = 1;
 __asm__ volatile("\
                  lfence                           \n\
                  rdtsc                            \n\
                  movq     %%rax, %[lowb]          \n\
                  movq     %%rdx, %[highb]         \n\
+                 nop \n\
                  lfence                           \n\
                  rdtsc                            \n\
                  movq     %%rax, %[lowa]          \n\

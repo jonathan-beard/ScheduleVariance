@@ -22,7 +22,7 @@ public:
    virtual ~Process();
    
    
-   virtual void Launch() = 0;
+   virtual void Launch( char **argv ) = 0;
 
    virtual void SetData( void *ptr ) = 0; 
 
