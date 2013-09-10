@@ -1,4 +1,4 @@
-CALIBRATECODEGENDIR = /mnt/hgfs/jonathanbeard/GIT_RPO/ScheduleVariance/Calibrate/
+CALIBRATECODEGENDIR = /home/mercury/beardj/GIT_RPO/ScheduleVariance/Calibrate/
 CALIBRATECPPCODEBASE = \
    threethousand \
    hundred \

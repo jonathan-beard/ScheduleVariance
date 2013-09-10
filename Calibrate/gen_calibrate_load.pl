@@ -18,6 +18,7 @@ sub modifycpp($);
 # file or bad things could happen!!
 ##
 
+my @externalfiles = qw( calibrate formula linearformula );
 
 my %list = ('ten.cpp'            => 10,
             'twenty.cpp'         => 20,
@@ -124,8 +125,10 @@ sub clean( $$ )
             my $cmd = "$pwd/$filename";
             `rm -rf $cmd`;
          }
-         exit( 0 );
       }
+      my $cmd = "$pwd/Makefile";
+      `rm -rf $cmd`;
+      exit( 0 );
    }
    #get here then no cleaning to do
 }
@@ -146,6 +149,7 @@ sub makefile( $ )
       $name =~ s/\.[^.]+$//;
       $files .= "   $name \\\n";
    }
+   $files .= "   $_ \\\n", foreach ( @externalfiles );
    $files =~ s/\\\n$//;
    print OUTFILE $files;
    print OUTFILE "\n\n";
