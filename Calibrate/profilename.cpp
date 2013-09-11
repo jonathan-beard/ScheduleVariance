@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <cinttypes>
 #include <cstring>
+#include <vector>
+#include <sstream>
 
 #include <sys/utsname.h>
 #include <errno.h>
@@ -52,7 +54,7 @@ ProfileName::GetProfileName( const std::string basedir )
    }
    values.push_back( brand );
    /* get cpu model, family, stepping id(s) */
-   stdV::string model( "UnknownModel" );
+   std::string model( "UnknownModel" );
    std::string family( "UnknownFamily" );
    std::string stepping( "UnknownStepping" );
    if( is_cpu_id_supported() )
@@ -79,12 +81,12 @@ ProfileName::GetProfileName( const std::string basedir )
    }
    /* remove characters that aren't supposed to be in a file name */
    std::string draftoutput( profilename.str() );
-   const std::string illchars( "\\/:?\"<>|.";
-   for( char &c : draftoutput )
+   const std::string illchars( "\\/:?\"<>|." );
+   for( auto it( draftoutput.begin() ); it != draftoutput.end(); ++it )
    {
-      const bool found( illchars.find( c ) != std::string::npos;
+      const bool found( illchars.find( (*it) ) != std::string::npos );
       if( found )
-         c = "_";
+         (*it) = '_';
    }
    std::stringstream finaloutput;
    finaloutput << basedir << "/" << draftoutput;
