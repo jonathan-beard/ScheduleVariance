@@ -53,6 +53,15 @@ public:
       return( 1 );
    }
 
+   std::ostream& print( std::ostream &stream )
+   {
+      for( size_t i( 0 ); i < size; i++ )
+      {
+         stream << x[i] << " - " << y[i] << "\n";
+      }
+      return( stream );
+   }
+
 private:
    T *x;
    T *y;

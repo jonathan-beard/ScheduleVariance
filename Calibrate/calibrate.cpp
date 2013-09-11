@@ -17,6 +17,8 @@
 #include <cstdint>
 #include <sstream>
 #include <cassert>
+//TEMP
+#include <fstream>
 
 #include "calibrate.hpp"
 #include "formula.hpp"
@@ -129,6 +131,9 @@ params.push_back( seconds );
 /* now we have the number fo params */
 uint32_t  num_instructions = ( uint32_t )ceil( formula->solve( params ) );
 
+std::cerr << "num_instructions: " << num_instructions << "\n"; 
+exit( EXIT_SUCCESS );
+
 std::stringstream cmd_gen;
 cmd_gen << "./gen_noop_load.pl " << num_instructions << " " << seconds;
 /* use system to call perl script */
@@ -177,6 +182,14 @@ Formula*
 Calibrate::Regress( std::vector< Sample > &samples )
 {
    Data< double > data( samples );
+
+   std::ofstream outfile( "test" );
+   if( outfile.is_open() )
+   {
+      data.print( outfile );
+   }
+   outfile.close();
+
    const size_t stride( data.get_stride() );
    double c0( 0.0 );
    double c1( 0.0 );
@@ -196,6 +209,7 @@ Calibrate::Regress( std::vector< Sample > &samples )
       exit( EXIT_FAILURE );
    }
    Formula *output = new LinearFormula( c0, c1, cov00, cov01, cov11, sumsq );
+   output->print( std::cout );
    return( output );
 }
 

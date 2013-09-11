@@ -23,8 +23,8 @@ INC = -I./ -I./procstat $(DIRINC)
 include $(addsuffix /Makefile, $(addprefix ./, $(DIRINCLUDES)) )
 
 #STATIC = -static -static-libstdc++ -static-libgcc
-CXXFLAGS = -Wall $(CXXSTD) $(DEBUG) $(INC)
-CFLAGS = -Wall $(CSTD) $(DEBUG) $(INC)
+CXXFLAGS = -no-integrated-as -Wall $(CXXSTD) $(DEBUG) $(INC)
+CFLAGS = -no-integrated-as -Wall $(CSTD) $(DEBUG) $(INC)
 EXE = svar
 
 

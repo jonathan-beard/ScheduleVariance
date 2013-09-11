@@ -41,6 +41,11 @@ my %list = ('ten.cpp'            => 10,
             'fivethousand.cpp'   => 5000,
             'tenthousand.cpp'    => 10000,
             'twentythousand.cpp' => 20000
+#            'onehundredthousand.cpp' => 100000,
+#            'twohundredthousand.cpp' => 200000,
+#            'threehundredthousand.cpp' => 300000,
+#            'fourhundredthousand.cpp' =>  400000,
+#            'fivehundredthousand.cpp' =>  500000
             );
 ##
 # clean - call to see if we need to clean up 
@@ -75,7 +80,12 @@ sub gen( $ )
       print OUTFILE     "                   rdtsc                            \\n\\\n";
       print OUTFILE     "                   movq     %%rax, %[lowb]          \\n\\\n";
       print OUTFILE     "                   movq     %%rdx, %[highb]         \\n\\\n";
-      print OUTFILE     "                   nop \\n\\\n", for( $num );
+      for( my $i = 0; $i < $num; $i++ )
+      {
+         print OUTFILE     "                   nop \\n\\\n";
+      }
+
+
       print OUTFILE     "                   lfence                           \\n\\\n";
       print OUTFILE     "                   rdtsc                            \\n\\\n";
       print OUTFILE     "                   movq     %%rax, %[lowa]          \\n\\\n";
