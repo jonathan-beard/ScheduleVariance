@@ -24,7 +24,7 @@ my @externalcfiles   = qw( queryCPUID );
 my %list = ('ten.cpp'            => 10,
             'twenty.cpp'         => 20,
             'thirty.cpp'         => 30,
-            'fouty.cpp'          => 40,
+            'forty.cpp'          => 40,
             'fifty.cpp'          => 50,
             'sixty.cpp'          => 60,
             'seventy.cpp'        => 70,
@@ -108,8 +108,8 @@ sub gen( $ )
       print OUTFILE     "  uint64_t diff = cyclesafter - cyclesbefore;\n";
       print OUTFILE     "  const clock_t frequency( getStatedCPUFrequency() );\n";
       print OUTFILE     "  Sample sample_output;\n";
-      print OUTFILE     "  sample_output.index = (sample_index_t) $num;\n";
-      print OUTFILE     "  sample_output.measure = (sample_index_t) diff / (sample_index_t) frequency;\n";
+      print OUTFILE     "  sample_output.measure = (measure_t) $num;\n";
+      print OUTFILE     "  sample_output.index   = (sample_index_t) diff / (sample_index_t) frequency;\n";
       print OUTFILE     "  return( sample_output );\n";
       print OUTFILE     "}\n";
       close OUTFILE;
@@ -153,8 +153,8 @@ sub makefile( $ )
    $pwd = "$pwd/";
 	print OUTFILE "CC = clang\n";
 	print OUTFILE "CXX = clang++\n";
-	print OUTFILE "CXXFLAGS = -I. -I../ -Wall -std=c++11 -O1\n";
-	print OUTFILE "CFLAGS = -I. -I../ -Wall -std=c99 -O1\n";
+	print OUTFILE "CXXFLAGS = -I. -I../ -Wall -std=c++11 -O0 -g\n";
+	print OUTFILE "CFLAGS = -I. -I../ -Wall -std=c99 -O0 -g\n";
    print OUTFILE "CALIBRATECPPCODEBASE = \\\n";
    {
       my $files = "";

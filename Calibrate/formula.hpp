@@ -50,8 +50,6 @@ public:
     * @param   filename - const char*
     */
    void write( const char *filename );
-private:
-   std::stringstream *the_formula; 
 };
 
 #endif /* END _FORMULA_HPP_ */

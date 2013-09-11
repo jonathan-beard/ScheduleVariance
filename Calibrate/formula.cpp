@@ -31,7 +31,7 @@ Formula::InitFromFile( const char *filename )
       while( in_file.good() )
       {
          std::getline( in_file, line );
-         (*the_formula) << line;
+         ss << line;
       }
       in_file.close();
       /** hopefully load is implemented correctly **/
