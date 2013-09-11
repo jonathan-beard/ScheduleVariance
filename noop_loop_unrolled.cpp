@@ -76,5 +76,6 @@ NoOpLoopUnrolled::PrintData( std::ostream &stream, void *d )
 {
    NoOpLoopUnrolled::Data *d_ptr( reinterpret_cast< 
                                     NoOpLoopUnrolled::Data* >( d ) );
-   NoOpLoopUnrolled::Data::PrintData( stream, *d_ptr );                               return( stream );
+   NoOpLoopUnrolled::Data::PrintData( stream, *d_ptr );                               
+   return( stream );
 }

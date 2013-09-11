@@ -18,12 +18,13 @@ sub modifycpp($);
 # recompiled if you add extra calibration loads to %list
 ##
 
-my @externalfiles = qw( calibrate formula linearformula );
+my @externalcppfiles = qw( calibrate formula linearformula profilename );
+my @externalcfiles   = qw( queryCPUID );
 
 my %list = ('ten.cpp'            => 10,
             'twenty.cpp'         => 20,
             'thirty.cpp'         => 30,
-            'fourty.cpp'         => 40,
+            'fouty.cpp'          => 40,
             'fifty.cpp'          => 50,
             'sixty.cpp'          => 60,
             'seventy.cpp'        => 70,
@@ -155,17 +156,27 @@ sub makefile( $ )
 	print OUTFILE "CXXFLAGS = -I. -I../ -Wall -std=c++11 -O1\n";
 	print OUTFILE "CFLAGS = -I. -I../ -Wall -std=c99 -O1\n";
    print OUTFILE "CALIBRATECPPCODEBASE = \\\n";
-   my $files = "";
-   foreach my $name ( keys %$filelist )
    {
-      $name =~ s/\.[^.]+$//;
-      $files .= "   $name \\\n";
+      my $files = "";
+      foreach my $name ( keys %$filelist )
+      {
+         $name =~ s/\.[^.]+$//;
+         $files .= "   $name \\\n";
+      }
+      $files .= "   $_ \\\n", foreach ( @externalcppfiles );
+      $files =~ s/\\\n$//;
+      print OUTFILE $files;
    }
-   $files .= "   $_ \\\n", foreach ( @externalfiles );
-   $files =~ s/\\\n$//;
-   print OUTFILE $files;
 	print OUTFILE "\n";
-   print OUTFILE "OBJFILES = \$(addsuffix .o, \$(CALIBRATECPPCODEBASE) )\n";
+   print OUTFILE "CALIBRATECCODEBASE = \\\n";
+   {
+      my $files = "";
+      $files .= "   $_ \\\n", foreach( @externalcfiles );
+      $files =~ s/\\\n$//;
+      print OUTFILE $files;
+   }
+   print OUTFILE "\n";
+   print OUTFILE "OBJFILES = \$(addsuffix .o, \$(CALIBRATECPPCODEBASE) ) \$(addsuffix .o, \$(CALIBRATECCODEBASE) )\n";
    print OUTFILE "\n\n";
    print OUTFILE "lib: \n";
    print OUTFILE "	\$(MAKE) \$(OBJFILES)\n";

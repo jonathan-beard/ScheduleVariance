@@ -41,6 +41,7 @@ private:
    /* a way to register functions via perl script */
    typedef std::function< Sample (void) > SampleFunction;
    std::vector< SampleFunction >          samplefunctions;
+   const std::string                      basedirectory;
 };
 
 #endif /* END _CALIBRATE_HPP_ */
