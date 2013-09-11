@@ -13,9 +13,9 @@ sub genfunc($$);
 sub modifycpp($);
 
 ##
-# WARNING!! If you modify the hash %list below, ensure
-# to make the appropriate modifications in the calibrate.cpp
-# file or bad things could happen!!
+# NOTE: Be aware that the changes to list will automatically be 
+# updated in calibrate.cpp, therefore calibrate.cpp should be 
+# recompiled if you add extra calibration loads to %list
 ##
 
 my @externalfiles = qw( calibrate formula linearformula );
@@ -150,7 +150,10 @@ sub makefile( $ )
    my $pwd = `pwd`;
    chomp( $pwd );
    $pwd = "$pwd/";
-   print OUTFILE "CALIBRATECODEGENDIR = $pwd\n";
+	print OUTFILE "CC = clang\n";
+	print OUTFILE "CXX = clang++\n";
+	print OUTFILE "CXXFLAGS = -Wall -std=c++11 -O1\n";
+	print OUTFILE "CFLAGS = -Wall -std=c99 -O1\n";
    print OUTFILE "CALIBRATECPPCODEBASE = \\\n";
    my $files = "";
    foreach my $name ( keys %$filelist )
@@ -161,8 +164,15 @@ sub makefile( $ )
    $files .= "   $_ \\\n", foreach ( @externalfiles );
    $files =~ s/\\\n$//;
    print OUTFILE $files;
+	print OUTFILE "\n";
+   print OUTFILE "OBJFILES = \$(addsuffix .o, \$(CALIBRATECPPCODEBASE) )\n";
    print OUTFILE "\n\n";
-   print OUTFILE "CALIBRATECPPCODE = \$(addprefix \$(CALIBRATECODEGENDIR), \$(CALIBRATECPPCODEBASE))\n";
+   print OUTFILE "lib: \n";
+   print OUTFILE "	\$(MAKE) \$(OBJFILES)\n";
+	print OUTFILE "	\$(AR)	rcs	libcalibrate.a \$(OBJFILES)\n";
+	print OUTFILE "\n";
+	print OUTFILE "cleanlib: \n";
+	print OUTFILE "	rm -rf libcalibrate.a \$(OBJFILES)\n";
    close OUTFILE;
 }
 
