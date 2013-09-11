@@ -152,8 +152,8 @@ sub makefile( $ )
    $pwd = "$pwd/";
 	print OUTFILE "CC = clang\n";
 	print OUTFILE "CXX = clang++\n";
-	print OUTFILE "CXXFLAGS = -Wall -std=c++11 -O1\n";
-	print OUTFILE "CFLAGS = -Wall -std=c99 -O1\n";
+	print OUTFILE "CXXFLAGS = -I. -I../ -Wall -std=c++11 -O1\n";
+	print OUTFILE "CFLAGS = -I. -I../ -Wall -std=c99 -O1\n";
    print OUTFILE "CALIBRATECPPCODEBASE = \\\n";
    my $files = "";
    foreach my $name ( keys %$filelist )
