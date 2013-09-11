@@ -41,8 +41,8 @@ my %list = ('ten.cpp'            => 10,
             'fourthousand.cpp'   => 4000,
             'fivethousand.cpp'   => 5000,
             'tenthousand.cpp'    => 10000,
-            'twentythousand.cpp' => 20000
-#            'onehundredthousand.cpp' => 100000,
+            'twentythousand.cpp' => 20000,
+            'onehundredthousand.cpp' => 100000
 #            'twohundredthousand.cpp' => 200000,
 #            'threehundredthousand.cpp' => 300000,
 #            'fourhundredthousand.cpp' =>  400000,

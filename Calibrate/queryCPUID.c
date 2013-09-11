@@ -13,11 +13,22 @@
  */
 EFlags getEFlags(){
    EFlags flags;
-#if(__i386__ == 1)
-   __asm__ volatile("pushfd; pop %[flags]" : [flags] "=rm" (flags));
-#endif
-#if(__x86_64__ == 1)
-   __asm__ volatile("pushfq; pop %[flags]" : [flags] "=rm" (flags));
+#ifdef __i386__
+   __asm__ volatile("pushfd      \n\
+                     pop %[flags]" 
+                     : /* outputs */ 
+                        [flags] "=rm" (flags)
+                     : /* inputs  */
+                     : /* clobbers*/
+                     );
+#elif defined __x86_64__
+   __asm__ volatile("pushfq      \n\
+                     popq %[flags]" 
+                     : /* outputs */
+                        [flags] "=rm" (flags)
+                     : /* inputs  */
+                     : /* clobbers*/
+                     );
 #endif
    return (flags);
 }
@@ -27,11 +38,22 @@ EFlags getEFlags(){
  *
  */
 void setEFlags(const EFlags flags){
-#if (__i386__ == 1)
-   __asm__ volatile ("pushl %[flags]; pop{fd}" : : [flags] "rmi" (flags));
-#endif
-#if (__x86_64__ == 1)
-   __asm__ volatile ("push %[flags]; pop{fq}" : : [flags] "rmi" (flags));
+#ifdef __i386__
+   __asm__ volatile ("pushl %[flags] \n\
+                      pop{fd}" 
+                      : /* outputs */ 
+                      : /* inputs  */
+                        [flags] "rmi" (flags)
+                      : /* clobbers*/
+                      );
+#elif defined __x86_64__
+   __asm__ volatile ("pushl %[flags] \n\
+                      pop{fq}" 
+                      : /* outputs */ 
+                      : /* inputs  */
+                        [flags] "rmi" (flags)
+                      : /* clobbers */
+                      );
 #endif
 }
 

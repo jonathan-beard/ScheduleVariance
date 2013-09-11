@@ -29,6 +29,7 @@
 #include "profilename.hpp"
 
 //STARTCALIBRATEDECL
+extern Sample forty();
 extern Sample threethousand();
 extern Sample hundred();
 extern Sample twothousand();
@@ -45,7 +46,7 @@ extern Sample fivethousand();
 extern Sample ninety();
 extern Sample threehundred();
 extern Sample thirty();
-extern Sample fouty();
+extern Sample onehundredthousand();
 extern Sample ten();
 extern Sample twentythousand();
 extern Sample tenthousand();
@@ -57,6 +58,7 @@ Calibrate::Calibrate( double seconds,
 {
    
 //STARTFUNCTIONINSERT
+samplefunctions.push_back( forty );
 samplefunctions.push_back( threethousand );
 samplefunctions.push_back( hundred );
 samplefunctions.push_back( twothousand );
@@ -73,7 +75,7 @@ samplefunctions.push_back( fivethousand );
 samplefunctions.push_back( ninety );
 samplefunctions.push_back( threehundred );
 samplefunctions.push_back( thirty );
-samplefunctions.push_back( fouty );
+samplefunctions.push_back( onehundredthousand );
 samplefunctions.push_back( ten );
 samplefunctions.push_back( twentythousand );
 samplefunctions.push_back( tenthousand );
