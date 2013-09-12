@@ -166,10 +166,11 @@ samplefunctions.push_back( fivehundred );
    std::vector< double > params;
    params.push_back( seconds );
    /* now we have the number fo params */
-   uint32_t  num_instructions = ( uint32_t )ceil( formula->solve( params ) );
-
+   uint64_t  num_instructions = ( uint64_t )ceil( formula->solve( params ) );
+   
    std::stringstream cmd_gen;
    cmd_gen << "./gen_noop_load.pl " << num_instructions << " " << seconds;
+   
    /* use system to call perl script */
    if( system( cmd_gen.str().c_str() ) != 0 )
    {

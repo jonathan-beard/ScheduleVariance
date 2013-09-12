@@ -9,7 +9,7 @@
 #include "formula.hpp"
 #include <vector>
 #include <iostream>
-#include <string>
+#include <istream>
 
 class LinearFormula : public Formula
 {
@@ -28,7 +28,7 @@ public:
 
    virtual std::ostream& print( std::ostream &stream );
 
-   virtual void load( std::stringstream &formula );
+   virtual void load( std::istream &formula );
 
    virtual double solve( std::vector< double > &parameters );
 

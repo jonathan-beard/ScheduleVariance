@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <istream>
 
 class Formula{
 public:
@@ -35,7 +36,7 @@ public:
     * exception if the string doesn't match.
     * @param   formula - const std::string
     */
-   virtual void     load( std::stringstream &formula ) = 0;
+   virtual void     load( std::istream &formula ) = 0;
    /**
     * solve - provides a way for sub-classes to give a unified
     * way to solve using this formula

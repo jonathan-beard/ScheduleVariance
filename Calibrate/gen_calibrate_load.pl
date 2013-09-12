@@ -153,8 +153,8 @@ sub makefile( $ )
    $pwd = "$pwd/";
 	print OUTFILE "CC = gcc\n";
 	print OUTFILE "CXX = g++\n";
-	print OUTFILE "CXXFLAGS = -I. -I../ -Wall -std=c++11 -O1\n";
-	print OUTFILE "CFLAGS = -I. -I../ -Wall -std=c99 -O1\n";
+	print OUTFILE "CXXFLAGS = -I. -I../ -Wall -std=c++11 -O0 -g\n";
+	print OUTFILE "CFLAGS = -I. -I../ -Wall -std=c99 -O0 -g\n";
    print OUTFILE "CALIBRATECPPCODEBASE = \\\n";
    {
       my $files = "";

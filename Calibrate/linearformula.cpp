@@ -61,15 +61,14 @@ LinearFormula::print( std::ostream &stream )
 }
 
 void
-LinearFormula::load( std::stringstream &formula )
+LinearFormula::load( std::istream &formula )
 {
-   std::istringstream iss( formula.str() );
    std::string line;
    /* TODO: hacky way to do this, fix so they can be out of order */
    int index( 0 );
-   while( iss.good() )
+   while( formula.good() )
    {
-      std::getline( iss, line );
+      std::getline( formula, line, '\n' );
       switch( index++ )
       {
          case( 0 ):
@@ -114,8 +113,7 @@ LinearFormula::load( std::stringstream &formula )
          break;
          default:
          {
-            std::cerr << "Invalid characters \"" << line << "\", exiting!!\n";
-            exit( EXIT_FAILURE );
+            std::cerr << "Invalid characters \"" << line << "\", skipping!!\n";
          }
 
       }

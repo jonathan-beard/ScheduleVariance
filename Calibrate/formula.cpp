@@ -26,6 +26,7 @@ Formula::InitFromFile( const char *filename )
    std::ifstream in_file( filename, std::ifstream::in );
    if( in_file.is_open() )
    {
+ /*
       std::stringstream ss;
       std::string line;
       while( in_file.good() )
@@ -34,8 +35,10 @@ Formula::InitFromFile( const char *filename )
          ss << line;
       }
       in_file.close();
-      /** hopefully load is implemented correctly **/
-      load( ss );
+*/
+      load( in_file );
+      
+      in_file.close();
    }
    else
    {

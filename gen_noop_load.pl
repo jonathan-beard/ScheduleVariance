@@ -4,7 +4,7 @@ use warnings;
 
 my $num = shift( @ARGV );
 my $seconds = shift( @ARGV );
-my $file = "noop_loop_unrolled_load.cpp";
+my $file = "/tmp/noop_loop_unrolled_load.cpp";
 my $headerfile = "noop_loop_unrolled_load_seconds.hpp";
 
 open HEADERFILE, ">$headerfile" or die "Couldn't open headerfile!!\n";
@@ -49,4 +49,6 @@ print OUTFILE     "uint64_t cyclesafter
                      = (lowBitsAfter & 0xffffffff) | (highBitsAfter << 32);\n";
 print OUTFILE     "uint64_t diff = cyclesafter - cyclesbefore;\n";                     
 close OUTFILE;
+`ln -s /tmp/noop_loop_unrolled_load.cpp ./noop_loop_unrolled_load.cpp`;
+
 exit( 0 );
