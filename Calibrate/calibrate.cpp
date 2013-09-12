@@ -30,6 +30,7 @@
 
 //STARTCALIBRATEDECL
 extern Sample forty();
+extern Sample twohundredthousand();
 extern Sample threethousand();
 extern Sample hundred();
 extern Sample twothousand();
@@ -37,10 +38,12 @@ extern Sample fourhundred();
 extern Sample twohundred();
 extern Sample sixty();
 extern Sample eighty();
+extern Sample threehundredthousand();
 extern Sample thousand();
 extern Sample fifty();
 extern Sample fourthousand();
 extern Sample seventy();
+extern Sample fourhundredthousand();
 extern Sample twenty();
 extern Sample fivethousand();
 extern Sample ninety();
@@ -50,6 +53,7 @@ extern Sample onehundredthousand();
 extern Sample ten();
 extern Sample twentythousand();
 extern Sample tenthousand();
+extern Sample fivehundredthousand();
 extern Sample fivehundred();
 //ENDCALIBRATEDECL
 
@@ -59,6 +63,7 @@ Calibrate::Calibrate( double seconds,
    
 //STARTFUNCTIONINSERT
 samplefunctions.push_back( forty );
+samplefunctions.push_back( twohundredthousand );
 samplefunctions.push_back( threethousand );
 samplefunctions.push_back( hundred );
 samplefunctions.push_back( twothousand );
@@ -66,10 +71,12 @@ samplefunctions.push_back( fourhundred );
 samplefunctions.push_back( twohundred );
 samplefunctions.push_back( sixty );
 samplefunctions.push_back( eighty );
+samplefunctions.push_back( threehundredthousand );
 samplefunctions.push_back( thousand );
 samplefunctions.push_back( fifty );
 samplefunctions.push_back( fourthousand );
 samplefunctions.push_back( seventy );
+samplefunctions.push_back( fourhundredthousand );
 samplefunctions.push_back( twenty );
 samplefunctions.push_back( fivethousand );
 samplefunctions.push_back( ninety );
@@ -79,6 +86,7 @@ samplefunctions.push_back( onehundredthousand );
 samplefunctions.push_back( ten );
 samplefunctions.push_back( twentythousand );
 samplefunctions.push_back( tenthousand );
+samplefunctions.push_back( fivehundredthousand );
 samplefunctions.push_back( fivehundred );
 //ENDFUNCTIONINSERT
 

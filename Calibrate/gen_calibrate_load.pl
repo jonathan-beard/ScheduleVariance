@@ -42,11 +42,11 @@ my %list = ('ten.cpp'            => 10,
             'fivethousand.cpp'   => 5000,
             'tenthousand.cpp'    => 10000,
             'twentythousand.cpp' => 20000,
-            'onehundredthousand.cpp' => 100000
-#            'twohundredthousand.cpp' => 200000,
-#            'threehundredthousand.cpp' => 300000,
-#            'fourhundredthousand.cpp' =>  400000,
-#            'fivehundredthousand.cpp' =>  500000
+            'onehundredthousand.cpp' => 100000,
+            'twohundredthousand.cpp' => 200000,
+            'threehundredthousand.cpp' => 300000,
+            'fourhundredthousand.cpp' =>  400000,
+            'fivehundredthousand.cpp' =>  500000
             );
 ##
 # clean - call to see if we need to clean up 
@@ -151,8 +151,8 @@ sub makefile( $ )
    my $pwd = `pwd`;
    chomp( $pwd );
    $pwd = "$pwd/";
-	print OUTFILE "CC = clang\n";
-	print OUTFILE "CXX = clang++\n";
+	print OUTFILE "CC = gcc\n";
+	print OUTFILE "CXX = g++\n";
 	print OUTFILE "CXXFLAGS = -I. -I../ -Wall -std=c++11 -O1\n";
 	print OUTFILE "CFLAGS = -I. -I../ -Wall -std=c99 -O1\n";
    print OUTFILE "CALIBRATECPPCODEBASE = \\\n";
