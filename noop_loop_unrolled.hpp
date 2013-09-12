@@ -33,6 +33,7 @@ public:
            uint64_t freq,
            uint64_t cyclesStart,
            uint64_t cyclesEnd,
+           double   service_time,
            uint64_t delta );
    
       Data( const Data &d );
@@ -47,6 +48,8 @@ public:
       uint64_t cycles_start;
       uint64_t cycles_end;
       uint64_t diff;
+      /* nominally accutime, when calibtimed */
+      double   service_time;
    };
 
    virtual bool AllSet();

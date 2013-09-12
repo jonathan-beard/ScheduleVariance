@@ -14,7 +14,8 @@ NoOpLoopUnrolled::Data::Data() : Load::Data(),
                                  frequency( 0 ),
                                  cycles_start( 0 ),
                                  cycles_end( 0 ),
-                                 diff( 0 )
+                                 diff( 0 ),
+                                 service_time( 0.0 )
 {
    char name[ LOAD_LENGTH ] = "noop_unrolled\0";
    for( int i = 0; i < LOAD_LENGTH; i++ )
@@ -27,13 +28,15 @@ NoOpLoopUnrolled::Data::Data(uint64_t noopCount,
                              uint64_t freq,
                              uint64_t cyclesStart,
                              uint64_t cyclesEnd,
+                             double   service_time,
                              uint64_t delta ) :  
                               Load::Data(), 
                               noop_count( noopCount ),
                               frequency( freq ),
                               cycles_start( cyclesStart ),
                               cycles_end( cyclesEnd ),
-                              diff( delta )
+                              diff( delta ),
+                              service_time( service_time )
 {
    char name[ LOAD_LENGTH ] = "noop_unrolled\0";
    for( int i = 0; i < LOAD_LENGTH; i++ )
@@ -49,18 +52,24 @@ NoOpLoopUnrolled::Data::Data( const Data &d ) : Load::Data()
    cycles_start = d.cycles_start;
    cycles_end = d.cycles_end;
    diff = d.diff;
+   service_time = d.service_time;
+   for( int i = 0; i < LOAD_LENGTH; i++ )
+   {
+      load_name[i] = d.load_name[i];
+   }
 }
 
 void
 NoOpLoopUnrolled::Data::PrintHeader( std::ostream &stream )
 {
-   stream << "Load, Frequency, NoopCount, CyclesStart, CyclesEnd, Delta";
+   stream << "Load, ServiceTime, Frequency, NoopCount, CyclesStart, CyclesEnd, Delta";
 }
 
 void
 NoOpLoopUnrolled::Data::PrintData( std::ostream &stream, Data &d )
 {
-   stream << d.load_name << "," << d.frequency << "," << d.noop_count;
+   stream << d.load_name << "," << d.service_time << "," << d.frequency 
+      << "," << d.noop_count;
    stream << "," << d.cycles_start << "," << d.cycles_end << ",";
    stream << d.diff;
 }
@@ -99,6 +108,7 @@ NoOpLoopUnrolled::RunLoad( Process &p, GateKeeper &g, int64_t i )
                         frequency    /* what it says */,
                         cyclesbefore /* # cycles read before loop */,
                         cyclesafter  /* # cycles read after loop */,
+                        service_time /* calibrated nominal service rate */,
                         diff         /* delta between before, after */ );
       p.SetData( (void*) &d );
       g.WaitForGate( "ReadyToStart" );
