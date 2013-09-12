@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <cstdint>
 #include <cinttypes>
+#include <fstream>
 
 #include "command_arguments.h"
 #include "command_option_single.tcc"
@@ -28,6 +29,7 @@ main( int argc, char **argv )
 
    /* add help option */
    static bool help( false );
+   std::string output_file( "/tmp/output.csv" );
    cmd.addOption( 
          new Option< bool >( help,
                              "-h",
@@ -45,6 +47,11 @@ main( int argc, char **argv )
                              "-print_header",
                              "Print a header before data" ) );
 
+   cmd.addOption( 
+         new Option< std::string >( output_file,
+                                    "-f",
+                                    "Write output to file" ) );
+
    /* initialize processes & tests */
    Process *process( nullptr );
 
@@ -56,17 +63,23 @@ main( int argc, char **argv )
 
    /* check help */
    if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
-   std::stringstream output_stream; 
+
+   std::ofstream ofs( output_file );
+   if( ! ofs.is_open() )
+   {
+      std::cerr << "Failed to open output file \"" << output_file << "\", exiting!!\n";
+      exit( EXIT_FAILURE );
+   }
    if( print_header ) 
-      process->PrintHeader( output_stream );
+      process->PrintHeader( ofs );
    if( ! print_header )
    {
       process->Launch( argv );
       /* child prcesses will have exited */
       /* everybody else should be done at this point, get data */
-      process->PrintData( output_stream );
+      process->PrintData( ofs );
    }
-   std::cout << output_stream.str() << "\n";
+   ofs.close();
    delete( process );
    return( EXIT_SUCCESS );
 }

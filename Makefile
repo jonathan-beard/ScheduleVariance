@@ -8,8 +8,8 @@ DARWIN =
 endif
 
 
-DEBUG = -Wall -g -O0
-#RELEASE = -Wall -O1
+#DEBUG = -Wall -g -O0
+RELEASE = -Wall -O1
 CXXSTD = -std=c++11 $(DARWIN)
 CSTD = -std=c99
 
@@ -22,7 +22,7 @@ INC = -I./ -I./procstat -I./Calibrate $(DIRINC)
 
 include $(addsuffix /Makefile, $(addprefix ./, $(DIRINCLUDES)) )
 
-#STATIC 	= -static-libstdc++ -static-libgcc
+#STATIC 	= -static -static-libstdc++ -static-libgcc
 CXXFLAGS = -Wall $(CXXSTD) $(RELEASE) $(DEBUG) $(INC)
 CFLAGS 	= -Wall $(CSTD) $(RELEASE) $(DEBUG) $(INC)
 EXE = svar

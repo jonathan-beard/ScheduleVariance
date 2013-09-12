@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdlib>
+#include <string>
 #include "command_option_base.hpp"
 
 template <class T> class Option : public OptionBase {
@@ -109,7 +110,12 @@ template <class T> class Option : public OptionBase {
             errno = 0;
             (*(double*)(&theRealValue)) = strtod( value, NULL );
             if( errno != EXIT_SUCCESS ) return( false );
-         }else{
+         }
+         else if( typeid( T ) == typeid( std::string ) )
+         {
+            (*(std::string*)(&theRealValue)) = std::string( value );
+         }
+         else{
             /* invalid type conversion */
             return( false );
          }

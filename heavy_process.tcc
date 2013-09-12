@@ -39,9 +39,11 @@ public:
 struct Data : public D {
    Data( int64_t iteration, 
          int64_t id,
+         int64_t spawn,
          D            &data,
          ProcStatusData &d) : it( iteration ),
                               p_id( id ),
+                              spawn( spawn ),
                               d( data )
    {
       proc_stat_data.voluntary_context_swaps = 
@@ -53,6 +55,7 @@ struct Data : public D {
    
    int64_t  it;
    int64_t  p_id;
+   int64_t  spawn;
    D        d;
    ProcStatusData proc_stat_data;
 };
@@ -319,7 +322,7 @@ PrintData( std::ostream &stream )
          store->data[index].proc_stat_data.voluntary_context_swaps << ",";
       stream << 
          store->data[index].proc_stat_data.non_voluntary_context_swaps 
-            << ",";
+            << "," << store->data[index].spawn << ",";
       the_load.PrintData( stream, 
                           (void*) (&(store->data)[index].d) ) << "\n";
    }
@@ -332,7 +335,7 @@ PrintHeader( std::ostream &stream )
    stream << "TimeStamp"<< "," << "Iteration" << 
       "," << "ProcessID" << "," 
       << "VoluntaryContextSwaps";
-   stream << "," << "Non-VoluntaryContextswaps" << ",";
+   stream << "," << "Non-VoluntaryContextswaps" << "," << "LoadProcesses,";
    the_load.PrintHeader( stream );
    return( stream );
 }
@@ -356,6 +359,7 @@ SetData( void *ptr )
    int64_t iteration( get_curr_iteration() );
    Data process_data( iteration, 
                       my_id, 
+                      spawn,
                       *d_ptr, 
                       diff);
    delete( p_stat_data );
