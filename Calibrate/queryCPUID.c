@@ -23,7 +23,7 @@ EFlags getEFlags(){
                      );
 #elif defined __x86_64__
    __asm__ volatile("pushfq      \n\
-                     popq %[flags]" 
+                     pop    %[flags]" 
                      : /* outputs */
                         [flags] "=rm" (flags)
                      : /* inputs  */
@@ -47,7 +47,7 @@ void setEFlags(const EFlags flags){
                       : /* clobbers*/
                       );
 #elif defined __x86_64__
-   __asm__ volatile ("pushl %[flags] \n\
+   __asm__ volatile ("push %[flags] \n\
                       pop{fq}" 
                       : /* outputs */ 
                       : /* inputs  */

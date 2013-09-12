@@ -12,6 +12,77 @@
 
 #include "system_query.h"
 
+/**
+ * Data internal class stuff
+ */
+#define LOAD_LENGTH 40
+NoOpLoop::Data::Data() : Load::Data(),
+                         distribution( Deterministic ),
+                         service_time( 0.0 ),
+                         frequency( 0 ),
+                         mean_ticks_to_spin( 0 ),
+                         target_stop_tick( 0 ),
+                         actual_stop_tick( 0 )
+{
+   /* default constructor */
+}
+
+NoOpLoop::Data::Data( Distribution distro,
+                      double       serviceTime,
+                      uint64_t     freq,
+                      uint64_t     meanTicksToSpin,
+                      uint64_t     targetTicksToSpin,
+                      uint64_t     actualStopTick )  : 
+                        Load::Data(),
+                        distribution( distro ),
+                        service_time( serviceTime ),
+                        frequency( freq ),
+                        mean_ticks_to_spin( meanTicksToSpin ),
+                        target_stop_tick( targetTicksToSpin ),
+                        actual_stop_tick( actualStopTick )
+{
+   load_name[0] = 'n';
+   load_name[1] = 'o';
+   load_name[2] = 'o';
+   load_name[3] = 'p';
+   load_name[4] = '\0';
+}
+    
+NoOpLoop::Data::Data( const Data &d ) : Load::Data()
+{
+   /* not ideal, but it'll work for now */
+   for( int i = 0; i < LOAD_LENGTH; i++ )
+   {
+      load_name[i] = d.load_name[i];
+   }
+   distribution       = d.distribution;
+   service_time       = d.service_time;
+   frequency          = d.frequency;
+   mean_ticks_to_spin = d.mean_ticks_to_spin;
+   target_stop_tick   = d.target_stop_tick;
+   actual_stop_tick   = d.actual_stop_tick;
+}
+
+void 
+NoOpLoop::Data::PrintHeader( std::ostream &stream )
+{
+   stream << "Load" << "," << "Distribution" << "," << "ServiceTime";
+   stream << "," << "Frequency" << "," << "TicksToSpin" << ",";
+   stream << "TargetStopTick" << "," << "ActualStopTick" << "," << "TickDelta";
+}
+   
+void 
+NoOpLoop::Data::PrintData( std::ostream &stream, Data &d )
+{
+   stream << d.load_name << "," << 
+      DistributionString[ d.distribution ] << ",";
+   stream << d.service_time << "," << d.frequency << ",";
+   stream << d.mean_ticks_to_spin << "," << d.target_stop_tick << ",";
+   stream << d.actual_stop_tick << ",";
+   stream << ( d.actual_stop_tick - d.target_stop_tick );
+}
+
+
 const char *NoOpLoop::DistributionString[N] =
    {
       [Deterministic] = "Deterministic",

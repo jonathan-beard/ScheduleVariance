@@ -22,16 +22,11 @@ public:
    /**
     * Data - extend this struct to save state 
     */
-   struct Data{
-      Data()
-      {
-         /* nothing really to do */
-      }
+   class Data{
+   public:
+      Data() = default;
 
-      Data( const Data &d )
-      {
-         /* nothing really to do */
-      }
+      Data( const Data &d ) = default;
    }; 
    
    /**

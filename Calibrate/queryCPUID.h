@@ -8,7 +8,11 @@ extern "C" {
 #endif
 
 typedef struct{
+#ifdef __x86_64__
+     uint64_t
+#elif defined __i386__
      uint32_t
+#endif     
          CF      :  1,
                  :  1,
          PF      :  1,

@@ -25,57 +25,29 @@ public:
    
 
 
-#define LOAD_LENGTH 40
-   struct Data : public Load::Data{
-      Data() : Load::Data() , noop_count( 0 ),
-                              frequency( 0 ),
-                              cycles_start( 0 ),
-                              cycles_end( 0 ),
-                              diff( 0 )
-      {
-      }
+   class Data : public Load::Data{
+   public:
+      Data();
       
       Data(uint64_t noopCount,
            uint64_t freq,
            uint64_t cyclesStart,
            uint64_t cyclesEnd,
-           uint64_t delta ) :  Load::Data(), noop_count( noopCount ),
-                                             frequency( freq ),
-                                             cycles_start( cyclesStart ),
-                                             cycles_end( cyclesEnd ),
-                                             diff( delta )
-      {
-      }
+           uint64_t delta );
    
-      Data( const Data &d ) : Load::Data()
-      {
-         noop_count = d.noop_count;
-         frequency = d.frequency;
-         cycles_start = d.cycles_start;
-         cycles_end = d.cycles_end;
-         diff = d.diff;
-      }
+      Data( const Data &d );
 
-      static void PrintHeader( std::ostream &stream )
-      {
-         stream << "Load, Frequency, NoopCount, CyclesStart, CyclesEnd, Delta";
-      }
+      static void PrintHeader( std::ostream &stream );
 
-      static void PrintData( std::ostream &stream, Data &d )
-      {
-         stream << d.load_name << "," << d.frequency << "," << d.noop_count;
-         stream << "," << d.cycles_start << "," << d.cycles_end << ",";
-         stream << d.diff;
-      }
+      static void PrintData( std::ostream &stream, Data &d );
 
-      const char load_name[LOAD_LENGTH] = "noop_unrolled\0";
+      char load_name[ 40 ];
       uint64_t noop_count;
       uint64_t frequency;
       uint64_t cycles_start;
       uint64_t cycles_end;
       uint64_t diff;
    };
-#undef LOAD_LENGTH
 
    virtual bool AllSet();
 
