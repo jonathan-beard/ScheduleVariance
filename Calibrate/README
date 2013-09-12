@@ -1,0 +1,31 @@
+Use this section of the code if you want to use noops without a loop.
+Until I get a second to re-code the noop section by hand in assembly,
+we'll be limited to 1e6 noop instructions which is about 100 microseconds
+on a 3GHz machine, at least on mine (very machine dependent).  
+
+To use this, first run:
+./gen_calibrate_load.pl
+
+Then run:
+make lib
+
+This creates a static library file called libcalibrate.a which should be
+linked to the main executable.  Essentially what we're doing is running
+several sets of assembly code recording time samples, running linear 
+regression on them and then generating a formula which is saved in ../Profiles/.
+This formula is then used to determine the number of assembly instructions
+to generate for a user specified time.  The perl script ./gen_noop_load.pl
+is used to generate the specific noop load.  Other loads could easily 
+be substituted.  Be aware that this script writes the actual cpp output
+to /tmp and what you get in the directory is simply a symbolic link.  These
+files can get quite large, even with only 1e6 instructions.  When running,
+the calibrate library might decide to regenerate the load and recompile the 
+program, if this occurs some stuff might get written to the screen, this is 
+perfectly normal.
+
+To clean up, reverse the process:
+make cleanlib
+
+Then
+./gen_calibrate_load.pl clean
+

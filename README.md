@@ -19,6 +19,10 @@ How to compile:
 
 4) cd procstat; make procstatlib; cd ..
 
+4a) run ./gen_calibrate_load.pl 100 -1 in order to get a starter noop load.
+
+4b) cd Calibrate; ./gen_calibrate_load.pl; make lib; cd ..
+
 5) make 
 
 6) check out options; ./svar -h
@@ -29,4 +33,4 @@ Optionally:
 Design a new load by extending load.hpp base class.
 
 Things to do:
-1) Fix synchronization
+change noop unrolled load to hand assembly instead of using gcc

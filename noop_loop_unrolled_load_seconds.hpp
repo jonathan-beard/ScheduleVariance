@@ -1,1 +1,1 @@
-const double  expectedSeconds = .024;
+const double  expectedSeconds = -1;
