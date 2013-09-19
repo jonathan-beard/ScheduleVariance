@@ -56,7 +56,7 @@ main( int argc, char **argv )
    Process *process( nullptr );
 
    process = 
-      new HeavyProcess<NoOpLoopUnrolled, NoOpLoopUnrolled::Data >( cmd );
+      new HeavyProcess<NoOpLoop, NoOpLoop::Data >( cmd );
 
    /* process args */
    cmd.processArgs( argc, argv );
@@ -64,7 +64,7 @@ main( int argc, char **argv )
    /* check help */
    if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
 
-   std::ofstream ofs( output_file );
+   std::ofstream ofs( output_file, std::ofstream::out | std::ofstream::app );
    if( ! ofs.is_open() )
    {
       std::cerr << "Failed to open output file \"" << output_file << "\", exiting!!\n";
