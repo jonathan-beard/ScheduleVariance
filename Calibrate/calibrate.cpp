@@ -27,6 +27,8 @@
 #include "linearformula.hpp"
 #include "lineardatatwo.tcc"
 #include "profilename.hpp"
+#include "getexpectation.hpp"
+
 
 //STARTCALIBRATEDECL
 extern Sample forty();
@@ -166,10 +168,19 @@ samplefunctions.push_back( fivehundred );
    std::vector< double > params;
    params.push_back( seconds );
    /* now we have the number fo params */
-   uint64_t  num_instructions = ( uint64_t )ceil( formula->solve( params ) );
+   const uint64_t  num_instructions = 
+      ( uint64_t )ceil( formula->solve( params ) );
    
+
+   /**
+    * get expected number of cycles for this machine 
+    * with this number of instructions 
+    */
+   auto &es( GetExpectation::Cycles() );
+
+
    std::stringstream cmd_gen;
-   cmd_gen << "./gen_noop_load.pl " << num_instructions << " " << seconds;
+   cmd_gen << "./gen_noop_load.pl " << num_instructions << " " << seconds << " " << es.mean << " " << es.stddev;
    
    /* use system to call perl script */
    if( system( cmd_gen.str().c_str() ) != 0 )

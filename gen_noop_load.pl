@@ -4,6 +4,8 @@ use warnings;
 
 my $num = shift( @ARGV );
 my $seconds = shift( @ARGV );
+my $mean = shift( @ARGV );
+my $stddev = shift( @ARGV );
 my $file = "/tmp/noop_loop_unrolled_load.cpp";
 my $headerfile = "noop_loop_unrolled_load_seconds.hpp";
 
@@ -19,6 +21,8 @@ close HEADERFILE;
 open OUTFILE, ">$file" or die "Couldn't open load file!!\n";
 print OUTFILE     "uint64_t highBitsBefore = 0x0, lowBitsBefore = 0x0;\n";
 print OUTFILE     "uint64_t highBitsAfter  = 0x0, lowBitsAfter  = 0x0;\n";
+print OUTFILE     "const uint64_t  expectedMeanCycles = $mean;\n";
+#print OUTFILE     "const double    expectedSTDCycles  = $stddev;\n";
 print OUTFILE     "uint64_t theNoopCount   = $num;\n";
 print OUTFILE     "__asm__ volatile(\"\\\n";
 print OUTFILE     "                 lfence                           \\n\\\n";
@@ -47,7 +51,7 @@ print OUTFILE     "uint64_t cyclesbefore
                      = (lowBitsBefore & 0xffffffff) | (highBitsBefore << 32);\n";
 print OUTFILE     "uint64_t cyclesafter
                      = (lowBitsAfter & 0xffffffff) | (highBitsAfter << 32);\n";
-print OUTFILE     "uint64_t diff = cyclesafter - cyclesbefore;\n";                     
+print OUTFILE     "int64_t diff = ( cyclesafter - cyclesbefore ) - expectedMeanCycles ;\n";                     
 close OUTFILE;
 `ln -s /tmp/noop_loop_unrolled_load.cpp ./noop_loop_unrolled_load.cpp`;
 

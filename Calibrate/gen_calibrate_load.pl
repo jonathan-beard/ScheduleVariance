@@ -18,7 +18,8 @@ sub modifycpp($);
 # recompiled if you add extra calibration loads to %list
 ##
 
-my @externalcppfiles = qw( calibrate formula linearformula profilename );
+my @externalcppfiles = qw( calibrate formula linearformula profilename 
+                           getexpectation );
 my @externalcfiles   = qw( queryCPUID );
 
 my %list = ('ten.cpp'            => 10,
