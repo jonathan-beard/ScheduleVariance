@@ -11,7 +11,7 @@ close( INFILE );
 
 my @capturefields = ( 12 );
 
-my $boolfield = 14;
+my $boolfield = 5;
 
 shift( @lines );
 
@@ -37,6 +37,22 @@ foreach my $process ( 1 .. 20 )
    }
    close( OUTFILE );
 }
-#my OUTFILE, ">
+
+##EXTRACT ONLY THE CAPTURE FIELDS, SEND TO STDOUT
+#foreach my $line (@lines)
+#{
+#   chomp( $line );
+#   my @field = split/,/, $line; 
+#   if( $field[ $boolfield ] == $process )
+#   {
+#      my $outline = "";
+#      foreach my $index( @capturefields )
+#      {
+#         $outline .= $field[ $index ].",";
+#      }
+#      $outline =~ s/,$//;
+#      print STDOUT $outline."\n";
+#   }
+#}
 
 exit( 0 );
