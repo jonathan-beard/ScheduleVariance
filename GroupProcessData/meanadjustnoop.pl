@@ -18,40 +18,47 @@ my @outputColumns = ( "LoadProcesses",
 
 
 
+#get rid of header
+my $headerline = shift( @lines );
+chomp( $headerline );
+$headerline =~ s/\\n$//;
+my @tempfields = split /,/, $headerline;
+
 my %fieldIndex = (
-0     => "TimeStamp", 
-1     => "Iteration",
-2     => "ProcessID",
-3     => "VoluntaryContextSwaps",
-4     => "Non-VoluntaryContextswaps",
-5     => "LoadProcesses",
-6     => "Load",
-7     => "Distribution",
-8     => "ServiceTime",
-9     => "Frequency",
-10    => "TicksToSpin",
-11    => "TargetStopTick",
-12    => "ActualStopTick",
-13    => "TickDelta" );
+"TimeStamp" => 0, 
+"Iteration" => 0,
+"ProcessID" => 0,
+"VoluntaryContextSwaps" => 0,
+"Non-VoluntaryContextswaps" => 0,
+"LoadProcesses" => 0,
+"Load" => 0,
+"Distribution" => 0,
+"ServiceTime" => 0,
+"Frequency" => 0,
+"TicksToSpin" => 0,
+"TargetStopTick" => 0,
+"ActualStopTick" => 0,
+"TickDelta" => 0 );
 
-#didn't feel like re-writing so:
-%fieldIndex = reverse %fieldIndex;
-
+my $index = 0;
+foreach( @tempfields )
+{
+   $fieldIndex{ $_ } = $index++;
+}
 
 
 my %tickCount;
 my %tickAccum;
 my %tickMean;
 
-#get rid of header
-shift @lines;
 
 foreach my $line ( @lines )
 {
    chomp( $line );
    $line =~ s/\\n$//;
    my @field = split /,/, $line;
-   my $startTick = $field[ $fieldIndex{ "TargetStopTick" } ] - $field[ $fieldIndex{ "TicksToSpin" } ];
+   my $startTick = $field[ $fieldIndex{ "TargetStopTick" } ] - 
+                     $field[ $fieldIndex{ "TicksToSpin" } ];
    my $endTick   = $field[ $fieldIndex{ "ActualStopTick" } ];
    my $totalTicks = $endTick - $startTick;
    my $mu = $field[ $fieldIndex{ "ServiceTime" } ];
@@ -89,8 +96,19 @@ foreach my $key ( keys %fieldIndex )
 $columnFunction{ "TickDelta" } = sub {
    my $fields = shift;
    my $val    = shift;
-   my $correctedTicks = $val - $tickMean{ @$fields[ $fieldIndex{ "ServiceTime" } ] };
-   my $correctedSeconds = $correctedTicks / @$fields[ $fieldIndex{ "Frequency" }  ];
+   
+   my @field = @$fields;
+
+   my $startTick = $field[ $fieldIndex{ "TargetStopTick" } ] - 
+                     $field[ $fieldIndex{ "TicksToSpin" } ];
+   
+   my $endTick   = $field[ $fieldIndex{ "ActualStopTick" } ];
+   my $totalTicks = $endTick - $startTick;
+   
+   my $correctedTicks = $totalTicks - 
+                  $tickMean{ @$fields[ $fieldIndex{ "ServiceTime" } ] };
+   my $correctedSeconds = 
+      $correctedTicks / @$fields[ $fieldIndex{ "Frequency" }  ];
    return( $correctedSeconds );
    };   
 
