@@ -62,7 +62,7 @@ main( int argc, char **argv )
    cmd.processArgs( argc, argv );
 
    /* check help */
-   if( help ){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
+   if( help || argc == 1){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
 
    std::ofstream ofs( output_file, std::ofstream::out | std::ofstream::app );
    if( ! ofs.is_open() )
