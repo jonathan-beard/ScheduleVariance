@@ -78,15 +78,18 @@ void CmdArgs::processArgs(int argc, char **argv){
                    /* given flag     */ (*it)->get_flag().c_str() ) == 0 )
          {
             /* increment past flag */
-          if(! (*it)->is_help() ) i++;
-          const bool success( (*it)->setValue(  argv[i]  ) );
-          if( success != true )
-          {
-             errorstream << "Invalid input for flag (" <<
+            if(! (*it)->is_help() )
+            {
+               i++;
+            }
+            const bool success( (*it)->setValue(  argv[i]  ) );
+            if( success != true )
+            {
+               errorstream << "Invalid input for flag (" <<
                 (*it)->get_flag() << ") : " << argv[i] << "\n";
-          }
-          goto END;
-       }
+            }
+            goto END;
+         }
     }
       ignored_options.push( std::string( argv[i] ) );
       END:;
