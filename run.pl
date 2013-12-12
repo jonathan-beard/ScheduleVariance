@@ -6,12 +6,12 @@ use warnings;
 ######################
 ### CONFIG PARAMS ####
 ######################
-my $min_mu = .00000025;
-my $max_mu = .0001;
-my $mu_delta = .00000025;
+my $min_mu = .00000034;
+my $max_mu = 1;
+my $mu_delta = .0000050;
 my $min_processes = 1;
 my $max_processes = 20;
-my $iterations = 1000;
+my $iterations = 10;
 my $core = 1;
 ######################
 #### END CONFIGS #####
@@ -26,7 +26,7 @@ if( ! -e "./svar" )
 }
 
 
-my $outputfile = "/myscratch/rex_noop_loop_unrolled_12Sep2013.csv";
+my $outputfile = "/tmp/cinnaprob_noop_loop_34micros_1s_6Dec2013.csv";
 
 ## GEN HEADER ##
 `./svar -print_header true -f $outputfile`;

@@ -56,7 +56,14 @@ my $defaultfunc = sub{
 my %columnfunctions = ( 3 => $defaultfunc,
                         4 => $defaultfunc,
                         5 => $defaultfunc,
-                        7 => $defaultfunc,
+                        7 => sub {
+                           my $fields = shift;
+                           my $val    = shift;
+                           my $nominalMu = @$fields[ $muColumn ];
+                           my $actualMu  = $tickMean{ $nominalMu } /
+                                             @$fields[ $frequencyColumn ];
+                           return( $actualMu );
+                        },
                         12 => sub {
                            my $fields = shift;
                            my $val    = shift;

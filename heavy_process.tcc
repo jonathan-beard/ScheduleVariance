@@ -10,17 +10,18 @@
 #include <vector>
 #include <cassert>
 #include <array>
+#include <cstring>
 #include <sys/types.h>
 #include <sched.h>
 #include <signal.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/types.h>
 #include <sched.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/utsname.h>
 
 #include "procstat.h"
 #include "gatekeeper.hpp"
@@ -41,15 +42,17 @@ struct Data : public D {
          int64_t id,
          int64_t spawn,
          D            &data,
-         ProcStatusData &d) : it( iteration ),
-                              p_id( id ),
-                              spawn( spawn ),
-                              d( data )
+         ProcStatusData &d,
+         struct utsname &name) : it( iteration ),
+                                 p_id( id ),
+                                 spawn( spawn ),
+                                 d( data )
    {
       proc_stat_data.voluntary_context_swaps = 
          d.voluntary_context_swaps;
       proc_stat_data.non_voluntary_context_swaps = 
          d.non_voluntary_context_swaps;
+      std::memcpy( &machine_name, &name, sizeof( struct utsname ) );
    }
 
    
@@ -58,6 +61,7 @@ struct Data : public D {
    int64_t  spawn;
    D        d;
    ProcStatusData proc_stat_data;
+   struct utsname machine_name;
 };
 
 HeavyProcess( CmdArgs &cmd ) : Process( cmd ),

@@ -19,6 +19,12 @@
 #include <unistd.h>
 #endif
 
+
+#if ARM
+#include <linux/module.h>
+#include <linux/kernel.h>
+#endif
+
 #include "system_query.h"
 
 #ifndef USEPROCCPUINFO
@@ -187,6 +193,20 @@ inline size_t getCacheSize(const uint8_t level){
 inline uint64_t readTimeStampCounter()
 {
    uint64_t cycles = 0;
+
+#if __ARMEL__
+   __asm__ volatile("\
+                       mrc p15,0 %[cycrd], c15, c12, 1"
+                    :
+                    /* outputs */
+                     [cycrd] "=r"   (cycles)
+                    :
+                    /* inputs */
+                    :
+                    /* clobbered registers */
+                    );
+#else
+/* x86 of some type */
 #if __x86_64
    uint64_t highBits = 0x0, lowBits = 0x0;
    __asm__ volatile("\
@@ -224,7 +244,9 @@ inline uint64_t readTimeStampCounter()
    );
    cycles = highBits;
    cycles = (lowBits) | (cycles << 32); 
-#endif /* tsc 32/64-bit */
+#endif /* tsc 32/64-bit x86 */
+
+#endif /* end arm vs. x86
    return (cycles);
 }
 
