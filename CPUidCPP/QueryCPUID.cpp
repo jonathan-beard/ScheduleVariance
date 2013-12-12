@@ -109,16 +109,27 @@ void get_cpuid(Reg *input_registers,Reg *output_registers){
 #endif
 }
 
-char* getBrandName(Reg *in){
-   typedef union{
-      char processor_brand[12];
-      uint32_t ebx_ecx_edx[3];
-   }brand_name;
-   brand_name *out = (brand_name*)malloc(sizeof(brand_name));
-   out->ebx_ecx_edx[0] = in->ebx;
-   out->ebx_ecx_edx[2] = in->ecx;
-   out->ebx_ecx_edx[1] = in->edx;
-   return (out->processor_brand);
+std::string
+QueryCPUID::getBrandName()
+{
+   std::string output("NotSupported");
+   if(is_cpu_id_supported()){
+   
+      union{
+         char processor_brand[12];
+         uint32_t ebx_ecx_edx[3];
+      } brand_name;
+      Reg input,output;
+      zero_registers(&input);
+      zero_registers(&output);
+      input.eax = CPUID_BASIC;
+      get_cpuid(&input,&output);
+      brand_name->ebx_ecx_edx[0] = in->ebx;
+      brand_name->ebx_ecx_edx[2] = in->ecx;
+      brand_name->ebx_ecx_edx[1] = in->edx;
+      output = std::string( brand_name );
+   }
+   return( output );
 }
 
 void getCacheInfo(Reg **cache_info, size_t *count )

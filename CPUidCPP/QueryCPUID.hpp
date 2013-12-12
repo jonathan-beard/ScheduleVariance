@@ -216,27 +216,27 @@ typedef struct{
 
 class QueryCPUID{
 public:
-   QueryCPUID()            = default;
-   virtual ~QueryCPUID()   = default;
+   QueryCPUID()            = delete;
+   virtual ~QueryCPUID()   = delete;
    /**
     * getEFlags - return value is EFlags struct
     * @return struct EFlags
     */
-   struct EFlags getEFlags();
+   static struct EFlags getEFlags();
 
    /**
     * setEFlags - sets EFlags to values contained in 
     * struct EFlags flags
     * @param   flags - const EFlags
     */
-   void setEFlags(const EFlags flags);
+   static void setEFlags(EFlags &flags);
 
    /**
     * isCPUIDSupported - returns true if supported, false if
     * not.
     * @return bool 
     */
-   bool isCPUIDSupported();
+   static bool isCPUIDSupported();
 
    /**
     * getCPUID - sets cpuid in output registers based on 
@@ -244,18 +244,19 @@ public:
     * @param   input_registers - struct Reg*
     * @param   output_registers - struct Reg*
     */
-   void getCPUID(Reg *input_registers, Reg *output_registers);
+   static void getCPUID(struct Reg *input_registers, 
+                        struct Reg *output_registers);
 
    /**
     * getBrandName - get the name of the processor
     * @param   in - struct Reg*
     */
-   std::string getBrandName(Reg *in);
+   static std::string getBrandName();
 
    /**
     * getCacheInfo - 
     */
-   void getCacheInfo(Reg **cache_info, size_t *count);
+   static std::vector< std::string> getCacheInfo();
 
 protected:
    static inline void zero_registers(Reg *in){
