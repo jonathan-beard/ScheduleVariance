@@ -336,10 +336,23 @@ PrintData( std::ostream &stream )
 virtual std::ostream& 
 PrintHeader( std::ostream &stream )
 {
-   stream << "TimeStamp"<< "," << "Iteration" << 
-      "," << "ProcessID" << "," 
-      << "VoluntaryContextSwaps";
-   stream << "," << "Non-VoluntaryContextswaps" << "," << "LoadProcesses,";
+   const std::string sep( "," );
+   std::array<std::string,11> fields =
+      {
+         "TimeStamp",
+         "Iteration",
+         "ProcessID",
+         "VoluntaryContextSwaps",
+         "NonVoluntaryContextSwaps",
+         "LoadProcesses",
+         "SysName",
+         "NodeName",
+         "Release",
+         "Version",
+         "Machine",
+
+      };
+
    the_load.PrintHeader( stream );
    return( stream );
 }
@@ -359,13 +372,23 @@ SetData( void *ptr )
    diff.non_voluntary_context_swaps = 
       temp->non_voluntary_context_swaps - 
          p_stat_data->non_voluntary_context_swaps;
+            
    /* yes there is a whole lot of copying going on */
    int64_t iteration( get_curr_iteration() );
+   struct uname un;
+   memset( &un, 0x0, sizeof( struct uname ) );
+   errno = 0;
+   if( uname( &un ) == EXIT_FAILURE )
+   {
+      perror( "Failed to get uname information!!, setting to all zeros." );
+   }
+   
    Data process_data( iteration, 
                       my_id, 
                       spawn,
                       *d_ptr, 
-                      diff);
+                      diff,
+                      un );
    delete( p_stat_data );
    p_stat_data = temp;
    store->Set( &process_data ,
