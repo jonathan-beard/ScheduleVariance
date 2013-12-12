@@ -246,7 +246,7 @@ inline uint64_t readTimeStampCounter()
    cycles = (lowBits) | (cycles << 32); 
 #endif /* tsc 32/64-bit x86 */
 
-#endif /* end arm vs. x86
+#endif /* end arm vs. x86 */
    return (cycles);
 }
 

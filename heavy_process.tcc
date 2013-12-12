@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <array>
 #include <cassert>
 #include <array>
 #include <cstring>
@@ -42,8 +43,7 @@ struct Data : public D {
          int64_t id,
          int64_t spawn,
          D            &data,
-         ProcStatusData &d,
-         struct utsname &name) : it( iteration ),
+         ProcStatusData &d) : it( iteration ),
                                  p_id( id ),
                                  spawn( spawn ),
                                  d( data )
@@ -52,7 +52,6 @@ struct Data : public D {
          d.voluntary_context_swaps;
       proc_stat_data.non_voluntary_context_swaps = 
          d.non_voluntary_context_swaps;
-      std::memcpy( &machine_name, &name, sizeof( struct utsname ) );
    }
 
    
@@ -337,7 +336,8 @@ virtual std::ostream&
 PrintHeader( std::ostream &stream )
 {
    const std::string sep( "," );
-   std::array<std::string,11> fields =
+#define FIELDS 11
+   std::array<std::string,FIELDS> fields =
       {
          "TimeStamp",
          "Iteration",
@@ -349,11 +349,26 @@ PrintHeader( std::ostream &stream )
          "NodeName",
          "Release",
          "Version",
-         "Machine",
-
+         "Machine"
       };
-
+   for( std::string &str : fields )
+   {
+      stream << str << sep;
+   }
+#if(0)
+   auto unamefields( SystemInfo::UnameInfo::getFieldNames() );
+   for( std::string &str : unamefields )
+   {
+      stream << str << sep;
+   }
+   auto sysfn( SystemInfo::SysInfo::getFieldNames() );
+   for( std::string &str : sysfn )
+   {
+      stream << str << sep;
+   }
+#endif   
    the_load.PrintHeader( stream );
+#undef FIELDS   
    return( stream );
 }
 
@@ -375,6 +390,7 @@ SetData( void *ptr )
             
    /* yes there is a whole lot of copying going on */
    int64_t iteration( get_curr_iteration() );
+#if(0)   
    struct uname un;
    memset( &un, 0x0, sizeof( struct uname ) );
    errno = 0;
@@ -382,13 +398,13 @@ SetData( void *ptr )
    {
       perror( "Failed to get uname information!!, setting to all zeros." );
    }
-   
+#endif
+
    Data process_data( iteration, 
                       my_id, 
                       spawn,
                       *d_ptr, 
-                      diff,
-                      un );
+                      diff);
    delete( p_stat_data );
    p_stat_data = temp;
    store->Set( &process_data ,
