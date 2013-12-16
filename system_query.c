@@ -12,6 +12,10 @@
 #include <sys/sysctl.h>
 #endif
 
+#if (__ARMEL__ == 1)
+#include <time.h>
+#endif
+
 #if (__linux__ == 1)
 #include <sys/sysinfo.h>
 #include <fcntl.h>
@@ -70,7 +74,12 @@ inline uint32_t n_processors(){
 
 inline clock_t getStatedCPUFrequency(){
 #ifdef __linux__
-#if (USEPROCCPUINFO == 1)
+#if __ARMEL__
+   /* get info from /sys/devices
+    * NOTE: must be running as root to do this!!
+    */
+
+#elif (USEPROCCPUINFO == 1)
    FILE  *fp = NULL;
    errno = 0;
    fp = fopen("/proc/cpuinfo", "r");
@@ -195,16 +204,27 @@ inline uint64_t readTimeStampCounter()
    uint64_t cycles = 0;
 
 #if __ARMEL__
-   __asm__ volatile("\
-                       mrc p15,0 %[cycrd], c15, c12, 1"
-                    :
-                    /* outputs */
-                     [cycrd] "=r"   (cycles)
-                    :
-                    /* inputs */
-                    :
-                    /* clobbered registers */
-                    );
+   struct timespec ts;
+   errno = 0;
+   if( clock_gettime( CLOCK_REALTIME, &ts ) != 0 )
+   {
+      perror( "Failed to read real time clock, exiting!!\n");
+      exit( EXIT_FAILURE );
+   }
+   /**
+    * Note: we've got seconds and microseconds from the struct,
+    * timespec:
+    * struct timespec {
+    *    time_t tv_sec;  //seconds
+    *    long   tv_nsec; //nanoseconds
+    * };
+    * so we'll convert to microseconds since that's about the
+    * best resolution we can hope for given that we're making
+    * a function call to do this.
+    */
+    uint64_t micros( ts.tv_sec * 1e6 );
+    micros += (ts.tv_nsec * 1e-3 );
+    cycles = micros;
 #else
 /* x86 of some type */
 #if __x86_64

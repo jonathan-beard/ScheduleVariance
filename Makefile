@@ -28,15 +28,15 @@ CFLAGS 	= -Wall $(CSTD) $(RELEASE) $(DEBUG) $(INC)
 EXE = svar
 
 
-LIBS = $(STATIC) -lrt -lprocstat -lpthread -lm `pkg-config --libs gsl` -lcalibrate
-LDFLAGS = -L./procstat -L. -L./Calibrate
+LIBS = $(STATIC) -lrt -lprocstat -lpthread -lm `pkg-config --libs gsl`
+LDFLAGS = -L./procstat -L.
 
 UNROLLED = noop_loop_unrolled
 NOOP     = noop_loop
 
 CPPOBJ = main process \
 			load shm gate gatekeeper procwait \
-         $(UNROLLED) $(NOOP) $(CMDARGSCPPCODE)
+         $(NOOP) $(CMDARGSCPPCODE)
 
 COBJ	= system_query getrandom
 
