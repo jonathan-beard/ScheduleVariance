@@ -1,5 +1,5 @@
-CC   = clang
-CXX  = clang++
+CC   = gcc
+CXX  = g++
 
 ifeq ($(shell uname -s),Darwin)
 DARWIN = -stdlib=libc++
@@ -28,15 +28,20 @@ CFLAGS 	= -Wall $(CSTD) $(RELEASE) $(DEBUG) $(INC)
 EXE = svar
 
 
-LIBS = $(STATIC) -lrt -lprocstat -lpthread -lm `pkg-config --libs gsl`
-LDFLAGS = -L./procstat -L.
+LIBS = -lrt -lprocstat -lpthread -lm -lcalibrate `pkg-config --libs gsl`
+LDFLAGS = -L./procstat -L. -L./Calibrate
 
 UNROLLED = noop_loop_unrolled
 NOOP     = noop_loop
 
+##
+# SET LOAD TYPE HERE 
+##
+LOAD = $(UNROLLED)
+
 CPPOBJ = main process \
 			load shm gate gatekeeper procwait \
-         $(NOOP) $(CMDARGSCPPCODE)
+         $(LOAD) $(CMDARGSCPPCODE)
 
 COBJ	= system_query getrandom
 

@@ -56,7 +56,7 @@ main( int argc, char **argv )
    Process *process( nullptr );
 
    process = 
-      new HeavyProcess<NoOpLoop, NoOpLoop::Data >( cmd );
+      new HeavyProcess<NoOpLoopUnrolled, NoOpLoopUnrolled::Data >( cmd );
 
    /* process args */
    cmd.processArgs( argc, argv );
@@ -71,13 +71,13 @@ main( int argc, char **argv )
       exit( EXIT_FAILURE );
    }
    if( print_header ) 
-      process->PrintHeader( ofs );
+      process->PrintHeader( ofs ) << "\n";
    if( ! print_header )
    {
       process->Launch( argv );
       /* child prcesses will have exited */
       /* everybody else should be done at this point, get data */
-      process->PrintData( ofs );
+      process->PrintData( ofs ) << "\n";
    }
    ofs.close();
    delete( process );

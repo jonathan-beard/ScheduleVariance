@@ -17,6 +17,25 @@ my $core = 1;
 #### END CONFIGS #####
 ######################
 
+my $length = @ARGV;
+my $arg = shift( @ARGV );
+
+if( $length == 0 )
+{
+   print "At least one argument expected, either \"setup\" or output filename.\n";
+   exit( 0 );
+}
+
+if( $arg eq "setup" )
+{
+   `cp noop_loop_unrolled_load_template.cpp /tmp/noop_loop_unrolled_load.cpp`;
+   exit( 0 );
+}
+
+##
+# else assume arg is for the filename 
+##
+my $filename = $arg;
 
 ## CHECK TO SEE IF EXE IS COMPILED ##
 if( ! -e "./svar" )
@@ -26,7 +45,7 @@ if( ! -e "./svar" )
 }
 
 
-my $outputfile = "/tmp/cinnaprob_noop_loop_34micros_1s_6Dec2013.csv";
+my $outputfile = "/tmp/$filename";
 
 ## GEN HEADER ##
 `./svar -print_header true -f $outputfile`;
