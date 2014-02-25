@@ -63,4 +63,7 @@ for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
    }
 }
 
+## COPY FILE TO HOME DIR ##
+`cp $outputfile ~/$filename`;
+
 exit( 0 );
