@@ -69,6 +69,41 @@ main( int argc, char **argv )
       free( tmpdir );
       tmpdir = tmp;
    }
+   
+   /* check first 'n' characters for match */
+   const int length = strlen( tmpdir );
+   for( int i = 0; i < length; i++ )
+   {
+      if( path[i] != tmpdir[i] )
+      {
+         if( i == (length - 1 ) )
+         {
+            std::cerr << "Somthing is very wrong, bar exec in tmp folder\n";
+            exit( EXIT_FAILURE );
+         }
+         else
+         {
+            /* copy current folder to tmp */
+            int rand_name = rand();
+            /** TODO, figure out system MAX_PATH var **/
+            const size_t buff_length = 512 + length;
+            char buffer[ buff_length ];
+            std::memset( (char*)buffer[0], '\0', buff_length );
+            snprintf( buffer, buff_length, "cp -R %s %s%d", path,
+                                                            tmpdir,
+                                                            rand_name );
+            system( buffer );
+            /** change working dir **/
+            memset( (char*)buffer[0], '\0', buff_length );
+            snprintf( buffer, buff_length, "%s%d", tmpdir, rand_name );
+            chdir( buffer );
+         }
+         /** miss-match, get out **/
+         break;
+      }
+   }
+
+   free( path );
 
    /* initialize processes & tests */
    Process *process( nullptr );
@@ -102,5 +137,15 @@ main( int argc, char **argv )
    delete( process );
 
    /* now delete self */
+
+   path = getcwd( (char*)NULL, 0x0 );
+   assert( path != (char*)NULL );
+   //TODO, again, figure out MAX_PATH
+   const size_t buff_length = 512 + strlen( path );
+   char buffer[ buff_length ];
+   std::memset( (char*) buffer[0], '\0', buff_length );
+   snprintf( buffer, buff_length, "rm -rf %s", path );
+   system( buffer );
+   free( path );
    return( EXIT_SUCCESS );
 }
