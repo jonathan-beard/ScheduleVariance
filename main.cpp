@@ -21,14 +21,18 @@
 void
 CleanUp()
 {
-   path = getcwd( (char*)NULL, 0x0 );
+   char *path = getcwd( (char*)NULL, 0x0 );
    assert( path != (char*)NULL );
    //TODO, again, figure out MAX_PATH
    const size_t buff_length = 512 + strlen( path );
    char buffer[ buff_length ];
-   std::memset( (char*) buffer[0], '\0', buff_length );
+   std::memset( &buffer[0], '\0', buff_length );
    snprintf( buffer, buff_length, "rm -rf %s", path );
-   system( buffer );
+   errno = 0;
+   if( system( buffer ) != 0 )
+   {
+      perror( "Failed to cleanup /tmp contents, continuing!!" );
+   }
    free( path );
 }
 
@@ -98,12 +102,15 @@ main( int argc, char **argv )
       char *tmpdir = getenv( "TMPDIR" );
       if( tmpdir == (char*) NULL )
       {
-         tmpdir = "/tmp/";
+         const char *tmp = "/tmp/";
+         const size_t length = strlen( tmp ) + 1;
+         tmpdir = (char*) malloc( sizeof( char ) * length );
+         std::strncpy( tmpdir, tmp, length );
       }
       else
       {
          char *tmp = (char*) malloc( sizeof( char) * strlen( tmpdir ) + 1 );
-         sprintf( temp, "%s/", tmpdir );
+         sprintf( tmp, "%s/", tmpdir );
          free( tmpdir );
          tmpdir = tmp;
       }
@@ -126,15 +133,26 @@ main( int argc, char **argv )
                /** TODO, figure out system MAX_PATH var **/
                const size_t buff_length = 512 + length;
                char buffer[ buff_length ];
-               std::memset( (char*)buffer[0], '\0', buff_length );
+               std::memset( &buffer[0], '\0', buff_length );
                snprintf( buffer, buff_length, "cp -R %s %s%d", path,
                                                                tmpdir,
                                                                rand_name );
-               system( buffer );
+               errno = 0;
+               if( system( buffer ) != 0 )
+               {
+                  perror( "Failed to copy current folder to /tmp, exiting!!" );
+                  exit( EXIT_FAILURE );
+               }
                /** change working dir **/
-               memset( (char*)buffer[0], '\0', buff_length );
+               std::memset( &buffer[0], '\0', buff_length );
                snprintf( buffer, buff_length, "%s%d", tmpdir, rand_name );
-               chdir( buffer );
+               if( chdir( buffer ) != 0 )
+               {
+                  perror( "Failed to change directory to new copy, exiting!!" );
+                  delete( process );
+                  //TODO add proper cleanup that doesn't delete pwd
+                  exit( EXIT_FAILURE );
+               }
             }
             /** miss-match, get out **/
             break;
@@ -148,6 +166,9 @@ main( int argc, char **argv )
       /* everybody else should be done at this point, get data */
       process->PrintData( ofs ) << "\n";
       /* cleanup, files will dissappear after proc exits */
+      //TODO theoretically safe since all above should have exited upon failure
+      //however should re-write CleanUp to check to make sure its the temp one
+      //and not the code base
       CleanUp();
    }
    ofs.close();
