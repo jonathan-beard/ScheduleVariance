@@ -25,7 +25,6 @@ public:
    class Data{
    public:
       Data() = default;
-
       Data( const Data &d ) = default;
    }; 
    

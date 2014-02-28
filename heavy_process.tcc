@@ -22,13 +22,14 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/utsname.h>
 
 #include "procstat.h"
 #include "gatekeeper.hpp"
 #include "procwait.hpp"
 #include "process.hpp"
 #include "shm.hpp"
+#include "unameinfo.hpp"
+#include "sysinfo.hpp"
 
 class CmdArgs;
 
@@ -60,7 +61,6 @@ struct Data : public D {
    int64_t  spawn;
    D        d;
    ProcStatusData proc_stat_data;
-   struct utsname machine_name;
 };
 
 HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
@@ -81,7 +81,7 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                 "Number of processes to spawn" ) );
    /* add set processor option */
    cmd_args.addOption(
-         new Option< int64_t >( assigned_processor,
+         new Option< int64_t>(  assigned_processor,
                                 "-core#",
                                 "Which processor to run on" ) );
 
@@ -185,6 +185,7 @@ virtual void Launch( char **argv )
                             spawn,
                             shm_key_data );
 
+   /** TODO, fix to cleanup a bit better **/
    assert( store != nullptr );                         
 
    const int success( 0 );
@@ -315,20 +316,39 @@ virtual std::ostream&
 PrintData( std::ostream &stream )
 {
    const int64_t length( spawn * get_iterations() );
+   const std::string sep( "," );
+  
    for( int64_t index( 0 ); index < length; index++ )
    {
       /* a little hacky I admit, but it works */
-      stream << timestamp << ",";
-      stream << store->data[index].it << "," << 
-      store->data[index].p_id << ",";
+      stream << timestamp << sep;
+      stream << store->data[index].it << sep << 
+      store->data[index].p_id << sep;
       stream << 
-         store->data[index].proc_stat_data.voluntary_context_swaps << ",";
+         store->data[index].proc_stat_data.voluntary_context_swaps << sep;
       stream << 
          store->data[index].proc_stat_data.non_voluntary_context_swaps 
-            << "," << store->data[index].spawn << ",";
+            << sep << store->data[index].spawn << sep;
+   
+
+      auto unamedata( SystemInfo::UnameInfo::getFieldData() );
+      for( std::string &str : unamedata )
+      {
+         stream << str << sep;
+      }
+      
+      auto sysfn( SystemInfo::SysInfo::getFieldData() );
+      for( std::string &str : sysfn )
+      {
+         stream << str << sep;
+      }
       the_load.PrintData( stream, 
-                          (void*) (&(store->data)[index].d) ) << "\n";
+                          (void*) (&(store->data)[index].d) );
+      
+      stream << "\n";
    }
+      
+
    return( stream );
 }
 
@@ -355,19 +375,22 @@ PrintHeader( std::ostream &stream )
    {
       stream << str << sep;
    }
-#if(0)
+   
+   
    auto unamefields( SystemInfo::UnameInfo::getFieldNames() );
    for( std::string &str : unamefields )
    {
       stream << str << sep;
    }
+   
    auto sysfn( SystemInfo::SysInfo::getFieldNames() );
    for( std::string &str : sysfn )
    {
       stream << str << sep;
    }
-#endif   
+
    the_load.PrintHeader( stream );
+   stream << "\n";
 #undef FIELDS   
    return( stream );
 }

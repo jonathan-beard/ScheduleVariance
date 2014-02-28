@@ -41,6 +41,7 @@ LOAD = $(UNROLLED)
 
 CPPOBJ = main process \
 			load shm gate gatekeeper procwait \
+         sysinfo unameinfo \
          $(LOAD) $(CMDARGSCPPCODE)
 
 COBJ	= system_query getrandom
