@@ -22,6 +22,8 @@
 #include "noop_loop.hpp"
 #include "noop_loop_unrolled.hpp"
 
+#include "getrandom.h"
+
 void
 CleanUp()
 {
@@ -101,7 +103,7 @@ main( int argc, char **argv )
       /* TODO I'm sure there's a better way to do this */
       int global_fd = open( output_file.c_str(), O_RDWR );
       /* check and see if we're running from tmp */ 
-      srand( (int) time( (time_t*) NULL ) );
+      srand( getUniformRandom() );
       char *path = getcwd( (char*)NULL, 0x0 );
       assert( path != (char*) NULL );
 

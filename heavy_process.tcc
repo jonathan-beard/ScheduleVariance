@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "system_query.h"
 #include "procstat.h"
 #include "gatekeeper.hpp"
 #include "procwait.hpp"
@@ -66,6 +67,7 @@ struct Data : public D {
 HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                spawn( 1 ),
                                assigned_processor( 1 ),
+                               cluster( false ),
                                schedule( SCHED_OTHER ),
                                is_offspring( false ),
                                list( nullptr ),
@@ -85,6 +87,11 @@ HeavyProcess( CmdArgs &cmd ) : Process( cmd ),
                                 "-core#",
                                 "Which processor to run on" ) );
 
+   cmd_args.addOption( 
+         new Option< bool >( cluster,
+                             "-cluster",
+                             "Is this going to be run on a cluster?" ) );
+   
    cmd_args.addOption(
          new Option< int64_t >( schedule,
                                 "-sched",
@@ -203,7 +210,48 @@ virtual void Launch( char **argv )
       perror( "Failed to set scheduler" );
       exit( EXIT_FAILURE );
    }
-
+#if(1)
+   /** 
+    * We've gotta negotiate to run on a processor core so 
+    * that we know we're the only version of svar running
+    * on that core.
+    */
+   int fd = 0;
+   std::string filename = "/tmp/core_lock_0";
+   if( true )
+   {
+      const auto n_procs( n_processors() );
+      struct stat st;
+      std::memset( &st, 0x0, sizeof( struct stat ) );
+START:   
+      for( int i = 0; i < n_procs; i++ )
+      {
+         filename = "/tmp/core_lock_" + std::to_string( i );
+         if( stat( filename.c_str() , &st ) != 0 )
+         {
+            std::stringstream tempss;
+            tempss << "touch " << filename;
+            system(tempss.str().c_str() );
+            fd = open( filename.c_str(), O_RDWR );
+            int tries( 5 );
+            while( --tries )
+            {
+               if( lockf( fd, F_TLOCK, 0 ) == 0 )
+               {
+                  assigned_processor = i;
+                  /* we've a core to use, exit */
+                  goto PIN;
+               }
+            }
+         }
+         /* failure, go back to start and wait 
+          * for a core to be available
+          */
+      }
+      goto START;
+   }
+PIN:  
+#endif
    /* pin processor */
    /* the cpuset should be inherited by forked processes */
    cpu_set_t   *cpuset( nullptr );
@@ -309,6 +357,16 @@ END:;
       list = nullptr;
       delete( proc_wait );
       proc_wait = nullptr;
+#if(1)      
+      errno = 0;
+      if( lockf( fd, F_ULOCK, 0 ) != 0 )
+      {
+         perror( "Failed to unlock core file!!" );
+      }
+      close( fd );
+      std::string uncore( "rm -f " + filename );
+      system( uncore.c_str() );
+#endif      
    }
 }
 
@@ -431,6 +489,7 @@ SetData( void *ptr )
 protected:
    int64_t spawn;
    int64_t assigned_processor;
+   bool    cluster;
    int64_t schedule;
    bool    is_offspring;
 

@@ -23,7 +23,7 @@ my $num = shift( @ARGV );
 my $seconds = shift( @ARGV );
 my $mean = shift( @ARGV );
 my $stddev = shift( @ARGV );
-my $file = "/tmp/noop_loop_unrolled_load.cpp";
+my $file = "noop_loop_unrolled_load.cpp";
 my $headerfile = "noop_loop_unrolled_load_seconds.hpp";
 
 open HEADERFILE, ">$headerfile" or die "Couldn't open headerfile!!\n";
@@ -57,7 +57,6 @@ print OUTFILE     "uint64_t cyclesafter
 print OUTFILE     "int64_t diff = ( cyclesafter - cyclesbefore ) - expectedMeanCycles ;\n";                     
 close OUTFILE;
 
-`ln -s -f /tmp/noop_loop_unrolled_load.cpp ./noop_loop_unrolled_load.cpp`;
 
 sub breaknoop( $ )
 {
