@@ -8,6 +8,10 @@
 #include <cinttypes>
 #include <fstream>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "command_arguments.h"
 #include "command_option_single.tcc"
 #include "command_option_multiple.tcc"
@@ -81,7 +85,6 @@ main( int argc, char **argv )
    /* check help */
    if( help || argc == 1){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
 
-   /** hope we have a locking file system **/
    std::ofstream ofs( output_file, std::ofstream::out | std::ofstream::app );
    if( ! ofs.is_open() )
    {
@@ -94,6 +97,9 @@ main( int argc, char **argv )
    }
    else
    {
+      /* very hacky but we need a way to lock the file */
+      /* TODO I'm sure there's a better way to do this */
+      int global_fd = open( output_file.c_str(), O_RDWR );
       /* check and see if we're running from tmp */ 
       srand( (int) time( (time_t*) NULL ) );
       char *path = getcwd( (char*)NULL, 0x0 );
@@ -164,7 +170,22 @@ main( int argc, char **argv )
       process->Launch( argv );
       /* child prcesses will have exited */
       /* everybody else should be done at this point, get data */
-      process->PrintData( ofs ) << "\n";
+      /* get lock */
+      errno = 0;
+      if( lockf( global_fd, F_LOCK, 0 ) != 0 )
+      {
+         perror( "Failed to lock file, dumping ddata and exiting!!" );
+      }
+      else
+      {
+         process->PrintData( ofs ) << "\n";
+         errno = 0;
+         if( lockf( global_fd, F_ULOCK, 0 ) != 0 )
+         {  
+            perror( "Failed to unlock file, data written though!!" );
+         }  
+      }
+      close( global_fd );
       /* cleanup, files will dissappear after proc exits */
       //TODO theoretically safe since all above should have exited upon failure
       //however should re-write CleanUp to check to make sure its the temp one

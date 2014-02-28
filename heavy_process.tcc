@@ -356,20 +356,14 @@ virtual std::ostream&
 PrintHeader( std::ostream &stream )
 {
    const std::string sep( "," );
-#define FIELDS 11
-   std::array<std::string,FIELDS> fields =
+   std::array<std::string,6> fields =
       {
          "TimeStamp",
          "Iteration",
          "ProcessID",
          "VoluntaryContextSwaps",
          "NonVoluntaryContextSwaps",
-         "LoadProcesses",
-         "SysName",
-         "NodeName",
-         "Release",
-         "Version",
-         "Machine"
+         "LoadProcesses"
       };
    for( std::string &str : fields )
    {
@@ -391,7 +385,6 @@ PrintHeader( std::ostream &stream )
 
    the_load.PrintHeader( stream );
    stream << "\n";
-#undef FIELDS   
    return( stream );
 }
 
