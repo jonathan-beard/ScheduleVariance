@@ -52,6 +52,24 @@ main( int argc, char **argv )
                                     "-f",
                                     "Write output to file" ) );
 
+   /* check and see if we're running from tmp */ 
+   srand( (int) time( (time_t*) NULL ) );
+   char *path = getcwd( (char*)NULL, 0x0 );
+   assert( path != (char*) NULL );
+
+   char *tmpdir = getenv( "TMPDIR" );
+   if( tmpdir == (char*) NULL )
+   {
+      tmpdir = "/tmp/";
+   }
+   else
+   {
+      char *tmp = (char*) malloc( sizeof( char) * strlen( tmpdir ) + 1 );
+      sprintf( temp, "%s/", tmpdir );
+      free( tmpdir );
+      tmpdir = tmp;
+   }
+
    /* initialize processes & tests */
    Process *process( nullptr );
 
@@ -64,6 +82,7 @@ main( int argc, char **argv )
    /* check help */
    if( help || argc == 1){  cmd.printArgs(); exit( EXIT_SUCCESS ); }
 
+   /** hope we have a locking file system **/
    std::ofstream ofs( output_file, std::ofstream::out | std::ofstream::app );
    if( ! ofs.is_open() )
    {
@@ -81,5 +100,7 @@ main( int argc, char **argv )
    }
    ofs.close();
    delete( process );
+
+   /* now delete self */
    return( EXIT_SUCCESS );
 }
