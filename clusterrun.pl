@@ -42,8 +42,15 @@ for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
 {  
    for ( my $procs = $min_processes; $procs <= $max_processes; $procs+=1 )
    {
-      my $cmd = "./svar -p# $procs -mu $mu -iterations $iterations -f $outputfile";
-      `qsub -q all.q $cmd`;
+      my $clusterOutputFile = 
+      "\$!/bin/sh\n" +
+      "#\$ -cwd\n" +
+      "./svar -p\# $procs -mu $mu -iterations $iterations -f $outputfile\n";
+      open( QSUBOUT, ">", "svarjob.sh" );
+      print QSUBOUT, $clusterOutputFile;
+      close( QSUBOUT );
+      `qsub -q all.q svarjob.sh`;
+      sleep( 2 );
       while( `qstat -u beardj | wc -l` > 20 )
       {
          sleep( 10 );
