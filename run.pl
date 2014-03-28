@@ -6,12 +6,12 @@ use warnings;
 ######################
 ### CONFIG PARAMS ####
 ######################
-my $min_mu = .00000034;
+my $min_mu = .000050;
 my $max_mu = 1;
 my $mu_delta = .0000050;
 my $min_processes = 1;
 my $max_processes = 20;
-my $iterations = 10;
+my $iterations = 1000;
 my $core = 1;
 ######################
 #### END CONFIGS #####
@@ -26,16 +26,9 @@ if( $length == 0 )
    exit( 0 );
 }
 
-if( $arg eq "setup" )
-{
-   `cp noop_loop_unrolled_load_template.cpp /tmp/noop_loop_unrolled_load.cpp`;
-   exit( 0 );
-}
-
-##
 # else assume arg is for the filename 
 ##
-my $filename = $arg;
+my $outputfile = $arg;
 
 ## CHECK TO SEE IF EXE IS COMPILED ##
 if( ! -e "./svar" )
@@ -45,10 +38,9 @@ if( ! -e "./svar" )
 }
 
 
-my $outputfile = "/tmp/$filename";
 
 ## GEN HEADER ##
-`./svar -print_header true -f $outputfile`;
+#`./svar -print_header true -f $outputfile`;
 
 ################
 
@@ -56,14 +48,17 @@ my $outputfile = "/tmp/$filename";
 ## GEN OUTPUT ##
 for ( my $mu = $min_mu; $mu <= $max_mu; $mu += $mu_delta )
 {  
-   for ( my $procs = $min_processes; $procs <= $max_processes; $procs+=1 )
+   for ( my $procs = $min_processes; $procs <= ($max_processes - 4 ); $procs+=4 )
    {
-      my $cmd = "./svar -p# $procs -mu $mu -iterations $iterations -f $outputfile";
+      my $cmd = "./svar -cluster true -p# $procs -mu $mu -iterations $iterations -f $outputfile";
+      system($cmd);
+      $cmd = "./svar -cluster true -p# ".($procs+1)." -mu $mu -iterations $iterations -f $outputfile";
+      system($cmd);
+      $cmd = "./svar -cluster true -p# ".($procs+2)." -mu $mu -iterations $iterations -f $outputfile";
+      system($cmd);
+      $cmd = "./svar -cluster true -p# ".($procs+3)." -mu $mu -iterations $iterations -f $outputfile";
       `$cmd`;
    }
 }
-
-## COPY FILE TO HOME DIR ##
-`cp $outputfile ~/$filename`;
 
 exit( 0 );
